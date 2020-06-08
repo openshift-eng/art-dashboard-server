@@ -1,0 +1,4 @@
+class AWSConfigurationConstants(object):
+    AWS_PROFILE = "AWS_PROFILE"
+    SDB_DOMAIN = "SDB_DOMAIN"
+    AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION"
