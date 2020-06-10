@@ -61,9 +61,9 @@ class SimpleDBClientManager(object):
         where_string = ""
 
         if where_string_recv == "":
-            pass
+            where_string += "where `build.time.unix` is not null"
         else:
-            where_string = "where " + where_string_recv
+            where_string = "where `build.time.unix` is not null and " + where_string_recv
 
         return where_string
 
@@ -76,17 +76,20 @@ class SimpleDBClientManager(object):
         else:
             next_token = ""
 
+        order_by = "order by `build.time.unix` desc"
+
         try:
-            print("select * from {} {} limit {}".format(self._domain, where, data['limit']))
+
             if next_token == "":
                 select_response = self._client.select(
-                    SelectExpression="select * from {} {} limit {}".format(self._domain, where, data['limit']),
+                    SelectExpression="select * from {} {} {} limit {}".
+                    format(self._domain, where, order_by, data['limit']),
                     NextToken=next_token,
                     ConsistentRead=False
                 )
             else:
                 select_response = self._client.select(
-                    SelectExpression="select * from {} {} limit {}".format(self._domain, where, data['limit']),
+                    SelectExpression="select * from {} {} {} limit {}".format(self._domain, where, order_by, data['limit']),
                     NextToken=next_token
                 )
             return select_response

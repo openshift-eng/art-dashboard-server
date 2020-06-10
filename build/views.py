@@ -19,9 +19,9 @@ class BuildView(generics.CreateAPIView):
             select_response = client_manager.run_select(data)
             poolManager.release(client_manager)
             response = Response(data=select_response)
-            print(response.data)
+            #print(response.data)
             return response
         else:
             response = Response(data={"body": ["missing fields", serializer.errors]})
-            print(response.data)
+            #print(response.data)
             return response
