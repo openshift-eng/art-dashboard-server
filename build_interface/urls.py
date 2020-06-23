@@ -19,5 +19,7 @@ from django.conf.urls import url, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url('build/', include('build.urls'), name='build')
+    url('build/', include('build.urls'), name='build'),
+    url('ocp_build_data/', include('ocp_build_data.urls'), name="ocp_build_data"),
+    url('health/', include('build_health.urls'), name='build_health')
 ]

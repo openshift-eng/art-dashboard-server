@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com']
+ALLOWED_HOSTS = ['buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'build_health',
+    'build',
+    'ocp_build_data',
 ]
 
 MIDDLEWARE = [
@@ -88,6 +91,16 @@ WSGI_APPLICATION = 'build_interface.wsgi.application'
 #     # }
 # }
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'build',
+        'USER': 'root',
+        'PASSWORD': os.environ["MYSQL_PASSWORD"],
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
