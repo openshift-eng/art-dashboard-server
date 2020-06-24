@@ -1,7 +1,46 @@
 from rest_framework import generics
 from rest_framework.response import Response
-from.serializers import HealthRequestViewSerializer
-from .models import HealthRequests
+from .models import HealthRequests, Build
+from.serializers import HealthRequestViewSerializer, ImportBuildViewSerializer, DailyReportViewSerializer
+
+
+class ImportBuildDataRequest(generics.CreateAPIView):
+    serializer_class = ImportBuildViewSerializer
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = ImportBuildViewSerializer(data=request.data)
+
+        if serializer.is_valid():
+            status, message = HealthRequests.objects.if_daily_import_request_already_satisfied(serializer.data["date"])
+            return Response({"status": status, "message": message})
+        else:
+            return Response({"status": "error", "message": serializer.errors})
+
+
+class DailyBuildReport(generics.CreateAPIView):
+
+    serializer_class = DailyReportViewSerializer
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = DailyReportViewSerializer(data=request.data)
+        if serializer.is_valid():
+            request = serializer.data
+            request["type"] = "daily"
+            request_status = HealthRequests.objects.is_request_already_satisfied(request)
+
+            if not request_status:
+                message, status, request_id = HealthRequests.objects.handle_build_health_request(request)
+
+                if Build.objects.generate_daily_report(serializer.data["date"], request_id):
+                    return Response(data={"status": "success", "message": "Daily report generated."})
+                else:
+                    return Response(data={"status": "error", "message": "Something went wrong."})
+            else:
+                return Response(data={"status": "error", "message": "Request already completed."})
+        else:
+            return Response({"status": "error", "message": serializer.errors})
 
 
 class BuildHealthRequestView(generics.ListAPIView, generics.CreateAPIView):

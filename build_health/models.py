@@ -1,10 +1,47 @@
-from django.db import models
-import datetime
+from django.db import models, connection
+import datetime as dt
 from django.core import serializers
 from django.utils.timezone import now
 import json
+from lib.build_reports.daily_import import import_daily_data
+
+from datetime import datetime
+from time import strftime
 
 # Create your models here.
+
+
+class UnixTimestampField(models.DateTimeField):
+    """UnixTimestampField: creates a DateTimeField that is represented on the
+    database as a TIMESTAMP field rather than the usual DATETIME field.
+    """
+    def __init__(self, null=False, blank=False, **kwargs):
+        super(UnixTimestampField, self).__init__(**kwargs)
+        # default for TIMESTAMP is NOT NULL unlike most fields, so we have to
+        # cheat a little:
+        self.blank, self.isnull = blank, null
+        self.null = True # To prevent the framework from shoving in "not null".
+
+    def db_type(self, connection):
+        typ=['TIMESTAMP']
+        # See above!
+        if self.isnull:
+            typ += ['NULL']
+        if self.auto_created:
+            typ += ['default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP']
+        return ' '.join(typ)
+
+    def to_python(self, value):
+        if isinstance(value, int):
+            return datetime.fromtimestamp(value)
+        else:
+            return models.DateTimeField.to_python(self, value)
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        if value==None:
+            return None
+        # Use '%Y%m%d%H%M%S' for MySQL < 4.1
+        return strftime('%Y-%m-%d %H:%M:%S',value.timetuple())
 
 
 def generate_auto_health_request_with_missing_start_time(request_type):
@@ -12,22 +49,85 @@ def generate_auto_health_request_with_missing_start_time(request_type):
     start_time, end_time = None, None
 
     if request_type == "hourly":
-        start_time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:00:00")
-        end_time = (datetime.datetime.utcnow() + datetime.timedelta(hours=1)).strftime("%Y-%m-%d %H:00:00")
+        start_time = dt.datetime.utcnow().strftime("%Y-%m-%d %H:00:00")
+        end_time = (dt.datetime.utcnow() + dt.timedelta(hours=1)).strftime("%Y-%m-%d %H:00:00")
 
     elif request_type == "daily":
-        start_time = datetime.datetime.utcnow().strftime("%Y-%m-%d 00:00:00")
-        end_time = (datetime.datetime.utcnow() + datetime.timedelta(days=1)).strftime("%Y-%m-%d 00:00:00")
+        start_time = dt.datetime.utcnow().strftime("%Y-%m-%d 00:00:00")
+        end_time = (dt.datetime.utcnow()).strftime("%Y-%m-%d 00:00:00")
 
     return start_time, end_time
 
 
+class BuildManager(models.Manager):
+
+    @staticmethod
+    def generate_daily_report(date, request_id):
+
+        cursor = connection.cursor()
+        try:
+            cursor.execute("insert into log_build_daily_summary(fault_code, date, dg_name, label_name, label_version, request_id, count) select fault_code, date_format(iso_time, \"%Y-%m-%d\") as date, dg_name,  label_name, label_version, {} as request_id,   count(*) as count from log_build where date_format(iso_time, \"%Y-%m-%d\") = \"{}\" group by 1,2,3,4,5".format(request_id, date))
+            HealthRequests.objects.update_daily_report_status_for_a_date(request_id)
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def write_to_db_import_data(self, date, data):
+
+        for data_point in data:
+            m = self.create(**data_point)
+
+            if not m.save():
+                pass
+            else:
+                print("Something went wrong.")
+
+        HealthRequests.objects.update_daily_import_status_for_a_date(date=date)
+
+
 class HealthRequestManager(models.Manager):
+
+    def update_daily_report_status_for_a_date(self, request_id):
+        daily_request = \
+            self.get(request_id=request_id)
+        daily_request.status = True
+        daily_request.save()
+
+    def update_daily_import_status_for_a_date(self, date):
+        daily_request = \
+            self.get(start_time=date + " 00:00:00", end_time=date + " 00:00:00", type="daily_import")
+        daily_request.status = True
+        daily_request.save()
+
+    def if_daily_import_request_already_satisfied(self, date):
+
+        daily_request = \
+            self.filter(start_time=date + " 00:00:00", end_time=date + " 00:00:00", type="daily_import").first()
+
+        if daily_request:
+            daily_request = json.loads(serializers.serialize('json', [daily_request, ]))
+            # this is the place to initiate the import request
+            if not daily_request[0]["fields"]["status"]:
+                data = import_daily_data(date=date, request_id=daily_request[0]["pk"])
+                Build.objects.write_to_db_import_data(date=date, data=data)
+            return "success", daily_request[0]["pk"]
+        else:
+            new_request = self.create(type="daily_import", start_time=date + " 00:00:00", end_time=date + " 00:00:00", status=False)
+
+            if not new_request.save():
+                # this is the place to initiate the import request
+                data = import_daily_data(date=date, request_id=new_request.request_id)
+                Build.objects.write_to_db_import_data(data=data, date=date)
+                return "success", new_request.request_id
+            else:
+                return "error", None
 
     def create_new_request(self, request_type, start, end, status):
         new_request = self.create(type=request_type, start_time=start, end_time=end, status=status)
 
         if not new_request.save():
+            # this is the place to put a new request for a build
             return "success", new_request.request_id
         else:
             return "error", None
@@ -51,6 +151,7 @@ class HealthRequestManager(models.Manager):
 
         if any_old_request:
             any_old_request = json.loads(serializers.serialize('json', [any_old_request, ]))
+            # this is the place to start put a new request to some sort of queue
             return "Restarting an old request.", "success", any_old_request[0]["pk"]
         else:
             status, request_id = self.create_new_request(request_type=request_type, start=start_time, end=end_time, status=False)
@@ -92,6 +193,10 @@ class HealthRequestManager(models.Manager):
 
 class HealthRequests(models.Model):
 
+    """
+    This class holds all the requests for the import, daily, hourly reports.
+    """
+
     request_id = models.AutoField(primary_key=True)
     type = models.CharField(max_length=20, blank=False, null=False, choices=(("d", "daily"), ("h", "hourly")))
     start_time = models.DateTimeField(null=False, blank=False)
@@ -100,3 +205,53 @@ class HealthRequests(models.Model):
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(default=now)
     objects = HealthRequestManager()
+
+
+class Build(models.Model):
+
+    """
+    This class represents the build record table which holds all the
+    build records that are dumped in SimpleDB. Let SimpleDB be there.
+    """
+
+    class Meta:
+        db_table = "log_build"
+
+    build_record_id = models.AutoField(primary_key=True)
+    build_id = models.BigIntegerField(blank=True, null=True)
+    request_id = models.BigIntegerField(blank=True, null=True)
+    fault_code = models.CharField(blank=False, null=False, max_length=300)
+    task_id = models.BigIntegerField(blank=True, null=True)
+    task_state = models.CharField(max_length=20, null=True, blank=True)
+    iso_time = models.DateTimeField()
+    unix_time = models.FloatField()
+    dg_commit = models.CharField(max_length=300)
+    dg_name = models.CharField(max_length=300)
+    dg_namespace = models.CharField(max_length=300)
+    group = models.CharField(max_length=300)
+    jenkins_build_number = models.BigIntegerField()
+    jenkins_build_url = models.URLField()
+    jenkins_job_name = models.CharField(max_length=300)
+    jenkins_job_url = models.URLField()
+    label_name = models.CharField(max_length=300)
+    label_version = models.CharField(max_length=300)
+    created_at = models.DateTimeField(now)
+    updated_at = models.DateTimeField(now)
+    objects = BuildManager()
+
+
+class DailyBuildReport(models.Model):
+
+    class Meta:
+        db_table = "log_build_daily_summary"
+
+    log_build_daily_summary_id = models.AutoField(primary_key=True)
+    fault_code = models.CharField(max_length=300)
+    date = models.DateField()
+    dg_name = models.CharField(max_length=300)
+    label_name = models.CharField(max_length=300)
+    label_version = models.CharField(max_length=300)
+    count = models.BigIntegerField()
+    request_id = models.BigIntegerField(null=True, blank=True)
+    created_at = UnixTimestampField(auto_created=True)
+    updated_at = UnixTimestampField(auto_created=True)
