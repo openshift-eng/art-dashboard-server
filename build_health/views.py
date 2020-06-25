@@ -1,7 +1,59 @@
 from rest_framework import generics
 from rest_framework.response import Response
-from.serializers import HealthRequestViewSerializer
-from .models import HealthRequests
+from .models import HealthRequests, Build, DailyBuildReport
+from.serializers import HealthRequestViewSerializer, ImportBuildViewSerializer, DailyReportViewSerializer
+
+
+class ImportBuildDataRequest(generics.CreateAPIView):
+    serializer_class = ImportBuildViewSerializer
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = ImportBuildViewSerializer(data=request.data)
+
+        if serializer.is_valid():
+            status, message = HealthRequests.objects.if_daily_import_request_already_satisfied(serializer.data["date"])
+            return Response({"status": status, "message": message})
+        else:
+            return Response({"status": "error", "message": serializer.errors})
+
+
+class DailyBuildReportView(generics.CreateAPIView, generics.ListAPIView):
+
+    serializer_class = DailyReportViewSerializer
+
+    def get(self, request, *args, **kwargs):
+
+        request_type = request.query_params.get("type", None)
+        date = request.query_params.get("date", None)
+
+        if request_type:
+            return Response(
+                data={"status": "success",
+                      "data": DailyBuildReport.objects.handle_request_for_daily_report_view_get(request_type, date),
+                      "message": "Data is ready."})
+        else:
+            return Response(data={"status": "error", "message": "Request type missing.", "data": None})
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = DailyReportViewSerializer(data=request.data)
+        if serializer.is_valid():
+            request = serializer.data
+            request["type"] = "daily"
+            request_status = HealthRequests.objects.is_request_already_satisfied(request)
+
+            if not request_status:
+                message, status, request_id = HealthRequests.objects.handle_build_health_request(request)
+
+                if Build.objects.generate_daily_report(serializer.data["start"], request_id):
+                    return Response(data={"status": "success", "message": "Daily report generated."})
+                else:
+                    return Response(data={"status": "error", "message": "Something went wrong."})
+            else:
+                return Response(data={"status": "error", "message": "Request already completed."})
+        else:
+            return Response({"status": "error", "message": serializer.errors})
 
 
 class BuildHealthRequestView(generics.ListAPIView, generics.CreateAPIView):

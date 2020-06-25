@@ -16,6 +16,10 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+CONF_FILE = 'conf/dev.env'
+CONF_FILE_PATH = BASE_DIR + "/" + CONF_FILE
+load_dotenv(CONF_FILE_PATH)
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -94,11 +98,11 @@ WSGI_APPLICATION = 'build_interface.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'build',
-        'USER': 'root',
+        'NAME': os.environ["MYSQL_DB_NAME"],
+        'USER': os.environ["MYSQL_USER"],
         'PASSWORD': os.environ["MYSQL_PASSWORD"],
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'HOST': os.environ["MYSQL_HOST"],
+        'PORT': os.environ["MYSQL_PORT"],
     }
 }
 
@@ -141,8 +145,3 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CORS_ORIGIN_ALLOW_ALL = True
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONF_FILE = 'conf/dev.env'
-CONF_FILE_PATH = BASE_DIR + "/" + CONF_FILE
-load_dotenv(CONF_FILE_PATH)

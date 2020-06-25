@@ -1,0 +1,2 @@
+# Query for daily report overview
+select date,sum( if(fault_code = 0, count,0)) as success, sum( if(fault_code != 0, count, 0)) as failure, sum(count) as total, (sum( if(fault_code = 0, count,0))/sum(count))*100 as success_rate  from log_build_daily_summary group by 1;
