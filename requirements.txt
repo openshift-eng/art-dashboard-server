@@ -10,6 +10,7 @@ docutils==0.15.2
 environ==1.0
 idna==2.9
 jmespath==0.10.0
+mysqlclient==1.4.6
 python-dateutil==2.8.1
 python-dotenv==0.13.0
 pytz==2020.1
