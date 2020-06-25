@@ -175,6 +175,7 @@ class HealthRequestManager(models.Manager):
         previous_request = self.filter(type=request_type, start_time=start_time, end_time=end_time).first()
         if previous_request:
             previous_request = json.loads(serializers.serialize('json', [previous_request, ]))
+            print(previous_request)
             previous_request = previous_request[0]
             return previous_request["fields"]["status"]
         else:
@@ -235,9 +236,72 @@ class Build(models.Model):
     jenkins_job_url = models.URLField()
     label_name = models.CharField(max_length=300)
     label_version = models.CharField(max_length=300)
-    created_at = models.DateTimeField(now)
-    updated_at = models.DateTimeField(now)
+    created_at = UnixTimestampField(auto_created=True)
+    updated_at = UnixTimestampField(auto_created=True)
     objects = BuildManager()
+
+
+class DailyBuildReportManager(models.Manager):
+
+    def handle_request_for_daily_report_view_get(self, request_type, date=None):
+
+        if request_type == "overview":
+            daily_stats = self.raw("select 1 as log_build_daily_summary_id, date,sum( if(fault_code = 0, count,0)) as success, sum( if(fault_code != 0, count, 0)) as failure, sum(count) as total, (sum( if(fault_code = 0, count,0))/sum(count))*100 as success_rate  from log_build_daily_summary group by 2 order by 2")
+            daily_stats_filters = []
+            for daily_stat in daily_stats:
+                d_stat = {"date": daily_stat.date,
+                          "success": daily_stat.success,
+                          "failure": daily_stat.failure,
+                          "total": daily_stat.total,
+                          "success_rate": daily_stat.success_rate}
+
+                daily_stats_filters.append(d_stat)
+
+            return daily_stats_filters
+
+        elif request_type == "fordate":
+            if date is None:
+                return []
+            else:
+                date_wise_stats = self.raw("select 1 as log_build_daily_summary_id, date, label_name, sum( if(fault_code = 0, count,0)) as success, sum( if(fault_code != 0, count, 0)) as failure, sum(count) as total, (sum( if(fault_code = 0,count,0))/sum(count))*100 as success_rate  from log_build_daily_summary where date=\"{0}\" group by 2,3 order by 7,6 desc".format(date))
+                date_wise_stats_filtered = []
+                total = success = failure = 0
+                for date_wise_stat in date_wise_stats:
+                    d_stat = {"date": date_wise_stat.date,
+                              "success": date_wise_stat.success,
+                              "failure": date_wise_stat.failure,
+                              "total": date_wise_stat.total,
+                              "success_rate": date_wise_stat.success_rate,
+                              "label_name": date_wise_stat.label_name}
+
+                    total += date_wise_stat.total
+                    success += date_wise_stat.success
+                    failure += date_wise_stat.failure
+
+                    date_wise_stats_filtered.append(d_stat)
+
+                data = {
+                    "total": total,
+                    "success": success,
+                    "failure": failure,
+                    "success_rate": (success/total)*100,
+                    "table_data": date_wise_stats_filtered
+                }
+                return data
+        elif request_type == "datewise_fault_code_stats":
+            if date is None:
+                return []
+            else:
+                fault_code_wise_stats = self.raw("select 1 as log_build_daily_summary_id, case when fault_code = \"\" then \"unknown\" else fault_code end as fault_code,sum(count) as count from log_build_daily_summary where date=\"{0}\" group by 2".format(date))
+                fault_code_wise_stats_filtered = []
+                for fault_code_wise_stat in fault_code_wise_stats:
+                    d_stat = {"fault_code": fault_code_wise_stat.fault_code,
+                              "count": fault_code_wise_stat.count}
+                    fault_code_wise_stats_filtered.append(d_stat)
+
+                return fault_code_wise_stats_filtered
+        else:
+            return {"message": "Invalid request type."}
 
 
 class DailyBuildReport(models.Model):
@@ -255,3 +319,4 @@ class DailyBuildReport(models.Model):
     request_id = models.BigIntegerField(null=True, blank=True)
     created_at = UnixTimestampField(auto_created=True)
     updated_at = UnixTimestampField(auto_created=True)
+    objects = DailyBuildReportManager()

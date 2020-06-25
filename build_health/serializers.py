@@ -17,7 +17,8 @@ class HealthRequestSerializer(serializers.Serializer):
 
 class DailyReportViewSerializer(serializers.Serializer):
 
-    date = serializers.DateField(required=False, default=datetime.datetime.today().date().strftime("%Y-%m-%d"))
+    start = serializers.DateField(required=False, default=datetime.datetime.today().date().strftime("%Y-%m-%d"))
+    end = serializers.DateField(required=False, default=datetime.datetime.today().date().strftime("%Y-%m-%d"))
 
     def update(self, instance, validated_data):
         pass

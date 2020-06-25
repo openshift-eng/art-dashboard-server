@@ -1,6 +1,6 @@
 from rest_framework import generics
 from rest_framework.response import Response
-from .models import HealthRequests, Build
+from .models import HealthRequests, Build, DailyBuildReport
 from.serializers import HealthRequestViewSerializer, ImportBuildViewSerializer, DailyReportViewSerializer
 
 
@@ -18,9 +18,22 @@ class ImportBuildDataRequest(generics.CreateAPIView):
             return Response({"status": "error", "message": serializer.errors})
 
 
-class DailyBuildReport(generics.CreateAPIView):
+class DailyBuildReportView(generics.CreateAPIView, generics.ListAPIView):
 
     serializer_class = DailyReportViewSerializer
+
+    def get(self, request, *args, **kwargs):
+
+        request_type = request.query_params.get("type", None)
+        date = request.query_params.get("date", None)
+
+        if request_type:
+            return Response(
+                data={"status": "success",
+                      "data": DailyBuildReport.objects.handle_request_for_daily_report_view_get(request_type, date),
+                      "message": "Data is ready."})
+        else:
+            return Response(data={"status": "error", "message": "Request type missing.", "data": None})
 
     def post(self, request, *args, **kwargs):
 
@@ -33,7 +46,7 @@ class DailyBuildReport(generics.CreateAPIView):
             if not request_status:
                 message, status, request_id = HealthRequests.objects.handle_build_health_request(request)
 
-                if Build.objects.generate_daily_report(serializer.data["date"], request_id):
+                if Build.objects.generate_daily_report(serializer.data["start"], request_id):
                     return Response(data={"status": "success", "message": "Daily report generated."})
                 else:
                     return Response(data={"status": "error", "message": "Something went wrong."})
