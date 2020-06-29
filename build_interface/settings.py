@@ -16,10 +16,22 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-CONF_FILE = 'conf/dev.env'
+CONF_FILE = 'conf/prod.env'
+
+if "RUN_ENV" in os.environ:
+    if os.environ["RUN_ENV"] == "development":
+        CONF_FILE = 'conf/dev.env'
+    elif os.environ["RUN_ENV"] == "production":
+        CONF_FILE = 'conf/prod.env'
+    else:
+        print("Invalid run environment.")
+        exit(1)
+else:
+    print("Run environment missing in environment variables.")
+    exit(1)
+
 CONF_FILE_PATH = BASE_DIR + "/" + CONF_FILE
 load_dotenv(CONF_FILE_PATH)
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/

@@ -7,3 +7,4 @@ build_health/__pycache__/
 conf/dev.env
 lib/build_reports/__pycache__/
 build_health/__pycache__/
+build_interface/__pycache__/
