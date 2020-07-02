@@ -246,7 +246,7 @@ class DailyBuildReportManager(models.Manager):
     def handle_request_for_daily_report_view_get(self, request_type, date=None):
 
         if request_type == "overview":
-            daily_stats = self.raw("select 1 as log_build_daily_summary_id, date,sum( if(fault_code = 0, count,0)) as success, sum( if(fault_code != 0, count, 0)) as failure, sum(count) as total, (sum( if(fault_code = 0, count,0))/sum(count))*100 as success_rate  from log_build_daily_summary group by 2 order by 2")
+            daily_stats = self.raw("select 1 as log_build_daily_summary_id, date,sum( if(fault_code = 0, count,0)) as success, sum( if(fault_code != 0, count, 0)) as failure, sum(count) as total, (sum( if(fault_code = 0, count,0))/sum(count))*100 as success_rate  from log_build_daily_summary group by 2 order by 2 desc")
             daily_stats_filters = []
             for daily_stat in daily_stats:
                 d_stat = {"date": daily_stat.date,

@@ -20,7 +20,7 @@ CONF_FILE = 'conf/prod.env'
 
 if "RUN_ENV" in os.environ:
     if os.environ["RUN_ENV"] == "development":
-        CONF_FILE = 'conf/dev.env'
+        CONF_FILE = 'conf/development.env'
     elif os.environ["RUN_ENV"] == "production":
         CONF_FILE = 'conf/prod.env'
     else:
@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'build_health',
     'build',
     'ocp_build_data',
+    'autocomplete'
 ]
 
 MIDDLEWARE = [
