@@ -17,7 +17,7 @@ class BuildView(generics.CreateAPIView, generics.ListAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            data = request.data
+            data = serializer.data
             poolManager = SimpleDBClientManagerPool()
             client_manager = poolManager.acquire()
             select_response = client_manager.run_select(data)

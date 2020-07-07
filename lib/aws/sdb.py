@@ -57,34 +57,42 @@ class SimpleDBClientManager(object):
         self._domain = os.environ[awscc.SDB_DOMAIN]
 
     @staticmethod
-    def handle_where(where_string_recv):
-        where_string = ""
+    def handle_where(where_string_recv, order_by):
+
+        if order_by:
+            where_string = "where " + order_by.split(" ")[0] + " is not null "
+        else:
+            where_string = "where `build.time.unix` is not null "
 
         if where_string_recv == "":
-            where_string += "where `build.time.unix` is not null"
+            where_string += ""
         else:
-            where_string = "where `build.time.unix` is not null and " + where_string_recv
+            where_string += "and "
+            where_string += where_string_recv
 
         return where_string
 
     def run_select(self, data: dict) -> dict:
 
-        where = SimpleDBClientManager.handle_where(data['where'])
+        where = SimpleDBClientManager.handle_where(data['where'], data["order_by"])
 
         if "next_token" in data:
             next_token = data["next_token"]
         else:
             next_token = ""
 
-        order_by = "order by `build.time.unix` desc"
+        if data["order_by"]:
+            order_by = "order by " + data["order_by"]
+        else:
+            order_by = "order by `build.time.unix` desc"
 
         try:
 
-            if next_token == "":
+            if next_token == "" or next_token is None:
                 select_response = self._client.select(
                     SelectExpression="select * from {} {} {} limit {}".
                     format(self._domain, where, order_by, data['limit']),
-                    NextToken=next_token,
+                    NextToken="",
                     ConsistentRead=False
                 )
             else:
