@@ -34,7 +34,8 @@ def get_required_data(filter_data):
             filter_data["next_token"] = next_token
         else:
             next_token = None
-            del filter_data["next_token"]
+            if "next_token" in filter_data:
+                del filter_data["next_token"]
 
     pool_manager.release(client_manager)
 

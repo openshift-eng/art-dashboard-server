@@ -2,6 +2,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from .models import HealthRequests, Build, DailyBuildReport
 from.serializers import HealthRequestViewSerializer, ImportBuildViewSerializer, DailyReportViewSerializer
+from .request_dispatcher import daily_build_filter_view_get
 
 
 class ImportBuildDataRequest(generics.CreateAPIView):
@@ -85,3 +86,16 @@ class BuildHealthRequestView(generics.ListAPIView, generics.CreateAPIView):
                                       "message": message})
         else:
             return Response(data={"error": serializer.errors})
+
+
+class DailyBuildFilterView(generics.ListAPIView):
+
+    def get(self, request, *args, **kwargs):
+
+        request_type = request.query_params.get("type", None)
+        date = request.query_params.get("date", None)
+
+        if request_type and date:
+            return Response({"status": "success", "data": daily_build_filter_view_get(request)})
+        else:
+            return Response({"status": "fail", "message": "Missing url params,", "data": []})

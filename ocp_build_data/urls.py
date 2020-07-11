@@ -1,6 +1,7 @@
 from django.conf.urls import url
-from .views import BranchData
+from .views import BranchData, GitStatsView
 
 urlpatterns = [
-    url('data/', BranchData.as_view(), name='branch_data_view')
+    url('branch/', BranchData.as_view(), name='branch_data_view'),
+    url('gitstats/', GitStatsView.as_view(), name='git_stats'),
 ]
