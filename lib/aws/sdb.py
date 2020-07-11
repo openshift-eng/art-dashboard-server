@@ -74,14 +74,17 @@ class SimpleDBClientManager(object):
 
     def run_select(self, data: dict) -> dict:
 
-        where = SimpleDBClientManager.handle_where(data['where'], data["order_by"])
+        if "order_by" in data:
+            where = SimpleDBClientManager.handle_where(data['where'], data["order_by"])
+        else:
+            where = SimpleDBClientManager.handle_where(data["where"], None)
 
         if "next_token" in data:
             next_token = data["next_token"]
         else:
             next_token = ""
 
-        if data["order_by"]:
+        if "order_by" in data and data["order_by"]:
             order_by = "order by " + data["order_by"]
         else:
             order_by = "order by `build.time.unix` desc"
