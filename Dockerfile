@@ -1,6 +1,6 @@
 FROM fedora:32
 USER root
-RUN dnf install -y \
+RUN yum install \
     # runtime dependencies
     krb5-workstation python3.6 python3-pip krb5-devel openssl-devel
 WORKDIR /opt/app-root/src
