@@ -1,8 +1,6 @@
 FROM fedora:32
 USER root
-RUN yum install \
-    # runtime dependencies
-    krb5-workstation python3.6 python3-pip krb5-devel openssl-devel
+RUN yum -y install krb5-workstation python3.6 python3-pip krb5-devel openssl-devel
 WORKDIR /opt/app-root/src
 COPY requirements.txt ./
 RUN pip3.6 install -r requirements.txt
