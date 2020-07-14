@@ -18,8 +18,11 @@ def get_all_ocp_build_data_branches():
     :return: dict, all the branches along with their details.
     """
 
+    access_token = os.environ["GITHUB_PERSONAL_ACCESS_TOKEN"]
+
     try:
-        req = requests.get(app_constants.GITHUB_URL_TO_LIST_ALL_OCP_BUILD_DATA_BRANCHES)
+        req = requests.get(app_constants.GITHUB_URL_TO_LIST_ALL_OCP_BUILD_DATA_BRANCHES,
+                           headers={"Authorization": "token " + access_token})
         branches = req.json()
         branches_data = []
 
@@ -54,14 +57,13 @@ def get_group_yml_file_url(branch_name: str) -> dict:
     :param branch_name: Branch name of ocp_build_data
     :return: adivsories details
     """
-
+    access_token = os.environ["GITHUB_PERSONAL_ACCESS_TOKEN"]
     hit_url = app_constants.GITHUB_GROUP_YML_CONTENTS_URL.format(branch_name)
-    hit_request = requests.get(hit_url)
+    hit_request = requests.get(hit_url, headers={"Authorization": "token " + access_token})
     return hit_request.json()["download_url"]
 
 
 def get_github_rate_limit_status():
-
     access_token = os.environ["GITHUB_PERSONAL_ACCESS_TOKEN"]
     hit_request = requests.get(os.environ["GITHUB_RATELIMIT_ENDPOINT"], headers={"Authorization": "token " + access_token})
     hit_response = hit_request.json()
