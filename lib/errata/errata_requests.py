@@ -39,6 +39,7 @@ def format_advisory_data(advisory_data):
 
     advisory_details = []
     bug_details = []
+    bug_summary = dict()
     final_response = {}
 
     if "errata" in advisory_data:
@@ -102,9 +103,27 @@ def format_advisory_data(advisory_data):
             else:
                 advisory_detail["security_approved"] = "Unknown"
 
+            if "content" in advisory_data and "content" in advisory_data["content"]:
+                qe_reviewer_id = None
+
+                doc_reviewer_id = advisory_data["content"]["content"]["doc_reviewer_id"] \
+                    if "doc_reviewer_id" in advisory_data["content"]["content"] \
+                    else None
+
+                product_security_reviewer_id = advisory_data["content"]["content"]["product_security_reviewer_id"] \
+                    if "product_security_reviewer_id" in advisory_data["content"]["content"] \
+                    else None
+
+                advisory_detail["qe_reviewer_id"] = qe_reviewer_id
+                advisory_detail["doc_reviewer_id"] = doc_reviewer_id
+                advisory_detail["product_security_reviewer_id"] = product_security_reviewer_id
+
+
             advisory_details.append(advisory_detail)
 
     final_response["advisory_details"] = advisory_details
+
+    total_bugs = 0
 
     if "bugs" in advisory_data:
         bug_data = advisory_data["bugs"]
@@ -120,6 +139,19 @@ def format_advisory_data(advisory_data):
                 bug["bug_link"] = "https://bugzilla.redhat.com/show_bug.cgi?id=" + str(each_bug["id"])
                 bug_details.append(bug)
 
+                if bug["bug_status"] not in bug_summary:
+                    bug_summary[bug["bug_status"]] = 0
+
+                bug_summary[bug["bug_status"]] += 1
+                total_bugs += 1
+
     final_response["bugs"] = bug_details
+    bug_summary_array = []
+    for key in bug_summary:
+        bug_summary_array.append({"bug_status": key,
+                                  "count": bug_summary[key],
+                                  "percent": round((bug_summary[key]/total_bugs)*100, 2)})
+
+    final_response["bug_summary"] = bug_summary_array
 
     return final_response
