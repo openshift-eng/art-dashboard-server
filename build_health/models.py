@@ -61,6 +61,35 @@ def generate_auto_health_request_with_missing_start_time(request_type):
 
 class BuildManager(models.Manager):
 
+    def generate_build_data_for_ui(self, query_string):
+        print(query_string)
+        raw_results = self.raw(query_string)
+
+        results = []
+
+        for raw_result in raw_results:
+            result = dict()
+            result["build_id"] = raw_result.build_id
+            result["fault_code"] = raw_result.fault_code
+            result["task_id"] = raw_result.task_id
+            result["iso_time"] = raw_result.iso_time
+            result["group"] = raw_result.group
+            result["label_name"] = raw_result.label_name
+            result["jenkins_build_url"] = raw_result.jenkins_build_url
+            result["nvr"] = raw_result.nvr
+            result["build_source"] = raw_result.build_source
+            result["dg_name"] = raw_result.dg_name
+            result["build_commit_url_github"] = raw_result.build_commit_url_github
+            result["jenkins_build_url"] = raw_result.jenkins_build_url
+            result["jenkins_build_number"] = raw_result.jenkins_build_number
+            result["jenkins_job_name"] = raw_result.jenkins_job_name
+            result["build_name"] = raw_result.build_name
+            result["build_version"] = raw_result.build_version
+
+            results.append(result)
+
+        return results
+
     def get_all_for_a_date_for_a_column(self, column_name, column_value, date):
         raw_results = self.raw(
             "select build_record_id, build_id, fault_code, task_id, iso_time, `group`, label_name jenkins_build_url from log_build where date(iso_time) = \"{}\" and {}=\"{}\"".format(
@@ -109,6 +138,7 @@ class BuildManager(models.Manager):
     def write_to_db_import_data(self, date, data):
 
         for data_point in data:
+            print(data_point)
             m = self.create(**data_point)
 
             if not m.save():
@@ -269,8 +299,13 @@ class Build(models.Model):
     jenkins_job_url = models.URLField()
     label_name = models.CharField(max_length=300)
     label_version = models.CharField(max_length=300)
-    created_at = UnixTimestampField(auto_created=True)
-    updated_at = UnixTimestampField(auto_created=True)
+    nvr = models.CharField(max_length=1000, default=None, null=True)
+    build_source = models.CharField(max_length=1000, default=None, null=True)
+    build_commit_url_github = models.CharField(max_length=1000, default=None, null=True)
+    build_version = models.CharField(max_length=100, default=None, null=True)
+    build_name = models.CharField(max_length=1000, default=None, null=True)
+    created_at = UnixTimestampField(auto_created=True, null=True)
+    updated_at = UnixTimestampField(auto_created=True, null=True)
     objects = BuildManager()
 
 

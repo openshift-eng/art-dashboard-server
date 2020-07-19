@@ -15,5 +15,10 @@ BUILD_TABLE_COLUMN = {
     "jenkins.job_name": "jenkins_job_name",
     "jenkins.job_url": "jenkins_job_url",
     "label.name": "label_name",
-    "label.version": "label_version"
+    "label.version": "label_version",
+    "build.0.nvr": "nvr",
+    "build.0.source": "build_source",
+    "label.io.openshift.build.commit.url": "build_commit_url_github",
+    "build.0.version": "build_version",
+    "build.0.name": "build_name",
 }
