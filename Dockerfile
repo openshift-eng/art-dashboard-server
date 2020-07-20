@@ -1,4 +1,5 @@
 FROM fedora:32
+USER root
 RUN yum -y install krb5-workstation python3.6 python3-pip krb5-devel openssl-devel cronie
 WORKDIR /opt/app-root/src
 RUN echo "$(echo '00 06 * * * sh ./cron_jobs/data_import.sh' ; crontab -l)" | crontab -
