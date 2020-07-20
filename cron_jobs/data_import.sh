@@ -1,0 +1,2 @@
+curl --header "Content-Type: application/json" --request POST --data '{"date": "'"$(date -d yesterday  +%Y-%m-%d)"'"}' http://buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com/health/import/
+curl --header "Content-Type: application/json" --request POST --data '{"start": "'"$(date -d yesterday  +%Y-%m-%d)"'", "end": "'"$(date -d yesterday  +%Y-%m-%d)"'"}' http://buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com/health/daily/

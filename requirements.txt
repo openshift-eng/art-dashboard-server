@@ -8,6 +8,7 @@ cryptography==2.9.2
 decorator==4.4.2
 Django==3.0.7
 django-cors-headers==3.3.0
+django-extensions==3.0.3
 djangorestframework==3.11.0
 docutils==0.15.2
 environ==1.0

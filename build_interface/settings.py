@@ -62,7 +62,8 @@ INSTALLED_APPS = [
     'build_health',
     'build',
     'ocp_build_data',
-    'autocomplete'
+    'autocomplete',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
