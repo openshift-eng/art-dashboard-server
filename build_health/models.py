@@ -62,7 +62,6 @@ def generate_auto_health_request_with_missing_start_time(request_type):
 class BuildManager(models.Manager):
 
     def generate_build_data_for_ui(self, query_string):
-        print(query_string)
         raw_results = self.raw(query_string)
 
         results = []
@@ -85,7 +84,6 @@ class BuildManager(models.Manager):
             result["jenkins_job_name"] = raw_result.jenkins_job_name
             result["build_name"] = raw_result.build_name
             result["build_version"] = raw_result.build_version
-
             results.append(result)
 
         return results
@@ -138,7 +136,6 @@ class BuildManager(models.Manager):
     def write_to_db_import_data(self, date, data):
 
         for data_point in data:
-            print(data_point)
             m = self.create(**data_point)
 
             if not m.save():
@@ -238,7 +235,6 @@ class HealthRequestManager(models.Manager):
         previous_request = self.filter(type=request_type, start_time=start_time, end_time=end_time).first()
         if previous_request:
             previous_request = json.loads(serializers.serialize('json', [previous_request, ]))
-            print(previous_request)
             previous_request = previous_request[0]
             return previous_request["fields"]["status"]
         else:
