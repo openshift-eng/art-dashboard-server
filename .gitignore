@@ -13,3 +13,8 @@ lib/__pycache__/
 build/__pycache__/
 build_health/__pycache__/
 autocomplete/__pycache__/
+autocomplete/__pycache__/
+build/__pycache__/
+lib/aws/__pycache__/
+lib/build_reports/__pycache__/
+.aws/
