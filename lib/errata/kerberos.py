@@ -13,7 +13,8 @@ def update_last_kinit_env_var():
     :return: None
     """
 
-    keytab_file = BASE_DIR + "/opt/app-root/src/.keytab/redhat.keytab"
+    keytab_file = BASE_DIR + "/.keytab/redhat.keytab"
+    print(keytab_file)
     kinit_request = subprocess.Popen(["kinit", "-kt", keytab_file, "adtrived@REDHAT.COM"],
                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, error = kinit_request.communicate()
