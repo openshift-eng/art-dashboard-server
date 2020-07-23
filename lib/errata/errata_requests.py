@@ -29,6 +29,34 @@ def get_advisory_data(advisory_id):
         return None
 
 
+@update_keytab
+def get_user_data(user_id):
+
+    """
+        This method returns user data for a given id.
+        :param user_id: The id of the user to get data for.
+        :return: Dict, user data.
+        """
+
+    errata_endpoint = os.environ["ERRATA_USER_ENDPOINT"]
+    errata_endpoint = errata_endpoint.format(user_id)
+
+    kerberos_auth = HTTPKerberosAuth(mutual_authentication=REQUIRED, sanitize_mutual_error_response=False)
+
+    response = requests.get(errata_endpoint, auth=kerberos_auth, verify=False)
+
+    try:
+        user_data = json.loads(response.text)
+        response = format_user_data(user_data)
+        return response
+    except Exception as e:
+        return None
+
+
+def format_user_data(user_data):
+    return user_data
+
+
 def format_advisory_data(advisory_data):
 
     """
@@ -61,6 +89,14 @@ def format_advisory_data(advisory_data):
                     advisory_detail["release_date"] = errata_data[key]["release_date"]
             else:
                 advisory_detail["release_date"] = "Unassigned"
+
+            if "publish_date" in errata_data[key]:
+                if errata_data[key]["publish_date"] is None:
+                    advisory_detail["publish_date"] = "Unassigned"
+                else:
+                    advisory_detail["publish_date"] = errata_data[key]["publish_date"].split("T")[0]
+            else:
+                advisory_detail["publish_date"] = "Unassigned"
 
             if "synopsis" in errata_data[key]:
                 advisory_detail["synopsis"] = errata_data[key]["synopsis"]
@@ -115,9 +151,25 @@ def format_advisory_data(advisory_data):
                     else None
 
                 advisory_detail["qe_reviewer_id"] = qe_reviewer_id
+
+                if qe_reviewer_id is not None:
+                    advisory_detail["qe_reviewer_details"] = get_user_data(qe_reviewer_id)
+                else:
+                    advisory_detail["qe_reviewer_details"] = None
+
                 advisory_detail["doc_reviewer_id"] = doc_reviewer_id
+
+                if doc_reviewer_id is not None:
+                    advisory_detail["doc_reviewer_details"] = get_user_data(doc_reviewer_id)
+                else:
+                    advisory_detail["doc_reviewer_details"] = None
+
                 advisory_detail["product_security_reviewer_id"] = product_security_reviewer_id
 
+                if product_security_reviewer_id is not None:
+                    advisory_detail["product_security_reviewer_details"] = get_user_data(product_security_reviewer_id)
+                else:
+                    advisory_detail["product_security_reviewer_details"] = None
 
             advisory_details.append(advisory_detail)
 
