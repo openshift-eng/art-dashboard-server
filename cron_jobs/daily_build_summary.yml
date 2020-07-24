@@ -1,0 +1,19 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: daily-build-summary
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            parent: "summary-cron"
+        spec:
+          successfulJobsHistoryLimit: 2
+          containers:
+          - name: daily-build-summary
+            image: fedora
+            command: ['curl', '--header', '"Content-Type: application/json"', '--request', 'POST', '--data', '''{"start": "''"$(date -d yesterday  +%Y-%m-%d)"''", "end": "''"$(date -d yesterday  +%Y-%m-%d)"''"}''', 'http://buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com/health/daily/']
+          restartPolicy: OnFailure

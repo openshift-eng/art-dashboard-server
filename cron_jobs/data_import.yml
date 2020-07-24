@@ -1,0 +1,19 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: import-mysql
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            parent: "import-cron"
+        spec:
+          successfulJobsHistoryLimit: 2
+          containers:
+          - name: import-mysql
+            image: fedora
+            command: ['curl', '--header', '"Content-Type: application/json"', '--request', 'POST', '--data', '''{"date": "''"$(date -d yesterday  +%Y-%m-%d)"''"}''', 'http://buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com/health/import/']
+          restartPolicy: OnFailure
