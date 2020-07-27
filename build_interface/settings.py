@@ -52,6 +52,11 @@ ALLOWED_HOSTS = ['buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com',
 # Application definition
 
 INSTALLED_APPS = [
+    'build_health',
+    'build',
+    'ocp_build_data',
+    'autocomplete',
+    'django_extensions',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -59,11 +64,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'build_health',
-    'build',
-    'ocp_build_data',
-    'autocomplete',
-    'django_extensions',
 ]
 
 MIDDLEWARE = [

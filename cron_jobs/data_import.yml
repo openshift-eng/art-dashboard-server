@@ -15,5 +15,5 @@ spec:
           containers:
           - name: import-mysql
             image: fedora
-            command: ['curl', '--header', '"Content-Type: application/json"', '--request', 'POST', '--data', '''{"date": "''"$(date -d yesterday  +%Y-%m-%d)"''"}''', 'http://buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com/health/import/']
+            command: ['curl', 'http://buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com/build']
           restartPolicy: OnFailure
