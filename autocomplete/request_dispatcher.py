@@ -11,12 +11,18 @@ def handle_autocomplete_get_request(request):
             "message": "Missing query param \"type\".",
             "data": []
         }
-    elif request_type == "nvr":
+    elif request_type == "dg_name":
         records = AutoCompleteRecord.objects.filter(type=request_type).values_list('value', flat=True)
         return {
             "status": "success",
             "message": "Here is your data.",
             "data": records
+        }
+    else:
+        return {
+            "status": "error",
+            "message": "Invalid request type.",
+            "data": []
         }
 
 
@@ -30,8 +36,8 @@ def handle_autocomplete_post_request(request):
             "message": "Missing query param \"type\".",
             "data": []
         }
-    elif request_type == "nvr":
-        status = AutoCompleteRecord.objects.insert_new_missing_records_for_type("nvr")
+    elif request_type == "dg_name":
+        status = AutoCompleteRecord.objects.insert_new_missing_records_for_type("dg_name")
         if status == 0:
             return {
                 "status": "success",
@@ -44,3 +50,9 @@ def handle_autocomplete_post_request(request):
                 "message": "Something went wrong.",
                 "data": []
             }
+    else:
+        return {
+            "status": "error",
+            "message": "Invalid request type.",
+            "data": []
+        }

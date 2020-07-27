@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+import sys
 
 
 class BuildHealthConfig(AppConfig):
@@ -7,4 +8,5 @@ class BuildHealthConfig(AppConfig):
 
     def ready(self):
         from lib.cron_schedules import start_scheduler_thread
-        start_scheduler_thread()
+        if sys.argv[1] == 'runserver':
+            start_scheduler_thread()

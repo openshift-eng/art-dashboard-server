@@ -8,12 +8,12 @@ class AutoCompleteRecordManager(models.Manager):
 
     def insert_new_missing_records_for_type(self, record_type):
 
-        if record_type == "nvr":
+        if record_type == "dg_name":
             try:
-                distinct_values = DailyBuildReport.objects.raw("select 1 as log_build_daily_summary_id, dg_name as nvr from log_build_daily_summary group by 2")
+                distinct_values = DailyBuildReport.objects.raw("select 1 as log_build_daily_summary_id, dg_name from log_build_daily_summary group by 2")
                 all_values = set()
                 for distinct_value in distinct_values:
-                    all_values.add(distinct_value.nvr)
+                    all_values.add(distinct_value.dg_name)
 
                 self.raw("delete from log_autocomplete_record where type = {}".format(record_type))
                 for value in all_values:
