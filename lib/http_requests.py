@@ -9,6 +9,7 @@ import traceback
 import os
 import yaml
 import time
+from ocp_build_data.models import OpenShiftCurrentAdvisory
 
 
 def get_all_ocp_build_data_branches():
@@ -73,8 +74,8 @@ def get_github_rate_limit_status():
     return hit_response
 
 
-def get_branch_advisory_ids(branch_name):
-    group_yml_url = os.environ["GITHUB_RAW_CONTENT_URL"].format(branch_name)
+def get_advisory_ids_from_sha(sha):
+    group_yml_url = os.environ["GITHUB_RAW_CONTENT_URL"].format(sha)
     access_token = os.environ["GITHUB_PERSONAL_ACCESS_TOKEN"]
     hit_request = requests.get(group_yml_url,
                                headers={"Authorization": "token " + access_token})
@@ -82,3 +83,100 @@ def get_branch_advisory_ids(branch_name):
     if "advisories" in hit_response:
         return hit_response["advisories"]
     return {}
+
+
+def get_branch_advisory_ids(branch_name):
+    group_yml_url = os.environ["GITHUB_RAW_CONTENT_URL"].format(branch_name)
+    access_token = os.environ["GITHUB_PERSONAL_ACCESS_TOKEN"]
+    hit_request = requests.get(group_yml_url,
+                               headers={"Authorization": "token " + access_token})
+    hit_response = yaml.load(hit_request.text)
+    if "advisories" in hit_response:
+        if OpenShiftCurrentAdvisory.objects.check_if_current_advisories_match(
+                branch_name=branch_name,
+                advisories=hit_response["advisories"]):
+            pass
+        else:
+            handle_mismatch_of_current_advisory_ids(branch_name=branch_name, advisories=hit_response["advisories"])
+
+    return OpenShiftCurrentAdvisory.objects.get_advisories_for_branch(branch_name)
+    # return {}
+
+
+def handle_mismatch_of_current_advisory_ids(branch_name, advisories):
+    current_advisories = advisories
+    commits = get_commits_for_groupyml(branch_name=branch_name)
+
+    current_advisories, current_advisories_sha = \
+        find_current_advisory(commits=commits, current_advisories=current_advisories)
+
+    previous_advisories, previous_advisories_sha = \
+        find_previous_advisory(commits=commits, current_advisories=current_advisories)
+
+    OpenShiftCurrentAdvisory.objects.delete_old_entries_and_create_new(branch_name=branch_name,
+                                                                       current_advisories=current_advisories,
+                                                                       previous_advisories=previous_advisories,
+                                                                       current_sha=current_advisories_sha,
+                                                                       previous_sha=previous_advisories_sha)
+
+
+def is_this_an_advisory_update_commit(commit):
+
+    commit_message_have_words = ['group.yml', 'advisory', 'advisories', 'update', 'group', 'yml']
+    commit_message = commit["commit"]["message"]
+    commit_message = commit_message.split(" ")
+    word_match_count = 0
+    for word in commit_message:
+        for commit_message_have_word in commit_message_have_words:
+            if word.lower()  in commit_message_have_word:
+                word_match_count += 1
+                break
+
+    if word_match_count >= 3:
+        return True
+    return False
+
+
+def find_current_advisory(commits, current_advisories):
+
+    for commit in commits:
+        if is_this_an_advisory_update_commit(commit=commit):
+            this_commit_advisories = get_advisory_ids_from_sha(commit["sha"])
+            for key in this_commit_advisories:
+                if key in current_advisories and current_advisories[key] == this_commit_advisories[key]:
+                    continue
+                else:
+                    return this_commit_advisories, commit["sha"]
+            else:
+                return current_advisories, commit["sha"]
+    return None
+
+
+def find_previous_advisory(commits, current_advisories):
+
+    found_first = False
+
+    for commit in commits:
+        if is_this_an_advisory_update_commit(commit=commit):
+            this_commit_advisories = get_advisory_ids_from_sha(commit["sha"])
+            if not found_first:
+                for key in this_commit_advisories:
+                    if key in current_advisories and current_advisories[key] == this_commit_advisories[key]:
+                        continue
+                    else:
+                        break
+                else:
+                    found_first = True
+            else:
+                return this_commit_advisories, commit["sha"]
+    return {}
+
+
+def get_commits_for_groupyml(branch_name):
+    url = os.environ["GITHUB_ALL_COMMITS_GROUPYML"].format(branch_name)
+    access_token = os.environ["GITHUB_PERSONAL_ACCESS_TOKEN"]
+    hit_request = requests.get(url,
+                               headers={"Authorization": "token " + access_token})
+
+    commits = hit_request.json()
+    return commits
