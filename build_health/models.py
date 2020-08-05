@@ -4,6 +4,7 @@ from django.core import serializers
 from django.utils.timezone import now
 import json
 from lib.build_reports.daily_import import import_daily_data
+from itertools import islice
 
 from datetime import datetime
 from time import strftime
@@ -139,14 +140,30 @@ class BuildManager(models.Manager):
 
     def write_to_db_import_data(self, date, data):
 
+        model_objects = []
+
+        max_log_build_id = self.raw("SELECT 1 as log_build_id ,`AUTO_INCREMENT` as max_log_build_id FROM  INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'build' AND TABLE_NAME   = 'log_build'")
+
+        if max_log_build_id:
+            max_log_build_id = max_log_build_id[0].max_log_build_id + 1
+        else:
+            max_log_build_id = 1
+
         for data_point in data:
-            m = self.create(**data_point)
+            print(max_log_build_id)
+            data_point["log_build_id"] = max_log_build_id
+            max_log_build_id += 1
+            m = Build(**data_point)
+            model_objects.append(m)
 
-            if not m.save():
-                pass
-            else:
-                print("Something went wrong.")
-
+        batch_size = 100
+        current_batch = 0
+        while True:
+            batch = model_objects[current_batch*batch_size:(current_batch+1)*batch_size]
+            if not batch:
+                break
+            self.bulk_create(batch, batch_size=batch_size)
+            current_batch += 1
         HealthRequests.objects.update_daily_import_status_for_a_date(date=date)
 
 

@@ -11,7 +11,6 @@ class ImportBuildDataRequest(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
 
         serializer = ImportBuildViewSerializer(data=request.data)
-        print(request.data)
         if serializer.is_valid():
             status, message = HealthRequests.objects.if_daily_import_request_already_satisfied(serializer.data["date"])
             return Response({"status": status, "message": message})

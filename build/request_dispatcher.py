@@ -26,21 +26,30 @@ def handle_build_post_request(request_params):
 
     for column in request_params:
         for column_condition in request_params[column]:
+            print(column_condition)
             if "like_or_where" not in column_condition or \
-                    "value" not in column_condition or \
-                    (column_condition["like_or_where"] == "where" and "cond" not in column_condition):
+                    "value" not in column_condition:
                 return {"status": "error", "message": "Missing value \"like_or_where\" in query string.", "data": []}
 
             if column_condition["like_or_where"] == "where":
-                where_string += "{} {} \"{}\" and ".format(column, column_condition["cond"], column_condition["value"])
+                value = str(column_condition["value"])
+                value = value.replace("%", "%%")
+                if "cond" in column_condition:
+                    where_string += "{} {} \"{}\" and ".format(column, column_condition["cond"], value)
+                else:
+                    where_string += "{} = \"{}\" and ".format(column, value)
             elif column_condition["like_or_where"] == "like":
-                where_string += "{} like \"%%{}%%\" and ".format(column, column_condition["value"])
+                value = str(column_condition["value"])
+                value = value.replace("%", "\\%%")
+                where_string += "{} like \"%%{}%%\" and ".format(column, value)
 
     if where_string == "":
         query_string = "select * from log_build " + order_by_string + " limit 200"
     else:
         where_string = "where " + where_string[:-4]
         query_string = "select * from log_build " + where_string + order_by_string
+
+    print(query_string)
 
     result = Build.objects.generate_build_data_for_ui(query_string)
     return {"status": "success", "message": "Data is ready.", "data": result}

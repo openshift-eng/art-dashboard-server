@@ -49,7 +49,6 @@ class BuildView1(generics.CreateAPIView):
                 except ValueError as e:
                     return Response(
                         data={"status": "error", "message": "Invalid request format.", "data": [], "error": str(e)})
-        print(post_data)
         response = handle_build_post_request(post_data)
 
         return Response(data=response)
