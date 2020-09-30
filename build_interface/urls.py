@@ -24,4 +24,5 @@ urlpatterns = [
     url('health/', include('build_health.urls'), name='build_health'),
     url('autocomplete/', include('autocomplete.urls'), name='autocomplete'),
     url('errata/', include('errata.urls'), name='errata'),
+    url('incident/', include('incident_reports.urls'), name='incident'),
 ]
