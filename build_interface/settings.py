@@ -46,12 +46,14 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com', '127.0.0.1', 'localhost', 'buildinterfaceserver-art-jenkins.cloud.paas.psi.redhat.com']
+ALLOWED_HOSTS = ['buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com', '127.0.0.1', 'localhost',
+                 'buildinterfaceserver-art-jenkins.cloud.paas.psi.redhat.com']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'incident_reports',
     'build_health',
     'build',
     'ocp_build_data',
