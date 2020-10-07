@@ -23,7 +23,7 @@ class IncidentManager(models.Manager):
             incident_instance.update(**incident)
 
     def get_all_incident(self):
-        incidents = self.filter().all()
+        incidents = self.filter().order_by('-log_incident_id').all()
         return json.loads(serializers.serialize('json', [incident for incident in incidents]))
 
 

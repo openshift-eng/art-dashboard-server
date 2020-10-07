@@ -6,10 +6,10 @@ from .models import Incident
 class IncidentSerializer(serializers.Serializer):
 
     description = serializers.CharField(max_length=20000, required=True)
-    impact = serializers.CharField(max_length=20000, required=False)
-    cause = serializers.CharField(max_length=20000, required=False)
-    remedy = serializers.CharField(max_length=20000, required=False)
-    action_items = serializers.CharField(max_length=20000, required=False)
+    impact = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
+    cause = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
+    remedy = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
+    action_items = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
     incident_start = serializers.DateTimeField(required=False, default=datetime.now)
     incident_end = serializers.DateTimeField(required=False, allow_null=True)
 
@@ -44,12 +44,12 @@ class IncidentSerializer(serializers.Serializer):
 class IncidentUpdateSerializer(IncidentSerializer):
 
     log_incident_id = serializers.IntegerField(required=True)
-    description = serializers.CharField(max_length=20000, required=False)
-    impact = serializers.CharField(max_length=20000, required=False)
-    cause = serializers.CharField(max_length=20000, required=False)
-    remedy = serializers.CharField(max_length=20000, required=False)
-    action_items = serializers.CharField(max_length=20000, required=False)
-    incident_start = serializers.DateTimeField(required=False)
+    description = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
+    impact = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
+    cause = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
+    remedy = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
+    action_items = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
+    incident_start = serializers.DateTimeField(required=False, allow_null=True)
     incident_end = serializers.DateTimeField(required=False, allow_null=True)
 
     def update_incident(self):
