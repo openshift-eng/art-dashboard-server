@@ -26,6 +26,13 @@ class IncidentManager(models.Manager):
         incidents = self.filter().order_by('-log_incident_id').all()
         return json.loads(serializers.serialize('json', [incident for incident in incidents]))
 
+    def delete_incident(self, incident_id):
+        try:
+            self.filter(log_incident_id=incident_id).delete()
+            return 0
+        except Exception as e:
+            return 1
+
 
 class Incident(models.Model):
 

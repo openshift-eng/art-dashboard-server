@@ -68,3 +68,26 @@ class IncidentUpdateSerializer(IncidentSerializer):
                 "message": "error",
                 "data": []
             }
+
+
+class IncidentDeleteSerializer(serializers.Serializer):
+
+    log_incident_id = serializers.IntegerField(required=True)
+
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
+    @staticmethod
+    def get_error_response():
+
+        return {
+            "status": 1,
+            "message": "Something went wrong with deletion.",
+            "data": []
+        }
+
+    def delete(self):
+        return Incident.objects.delete_incident(self.validated_data["log_incident_id"])
