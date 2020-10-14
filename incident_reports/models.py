@@ -40,6 +40,7 @@ class Incident(models.Model):
         db_table = "log_incident"
 
     log_incident_id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=100, blank=False, null=False)
     description = models.TextField(blank=False, null=False)
     impact = models.TextField(blank=True, null=True)
     cause = models.TextField(blank=True, null=True)
