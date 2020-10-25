@@ -5,6 +5,7 @@ from .models import Incident
 
 class IncidentSerializer(serializers.Serializer):
 
+    title = serializers.CharField(required=True, max_length=100)
     description = serializers.CharField(max_length=20000, required=True)
     impact = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
     cause = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
@@ -44,6 +45,7 @@ class IncidentSerializer(serializers.Serializer):
 class IncidentUpdateSerializer(IncidentSerializer):
 
     log_incident_id = serializers.IntegerField(required=True)
+    title = serializers.CharField(max_length=100, required=False, allow_null=True, allow_blank=True)
     description = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
     impact = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
     cause = serializers.CharField(max_length=20000, required=False, allow_null=True, allow_blank=True)
@@ -68,3 +70,26 @@ class IncidentUpdateSerializer(IncidentSerializer):
                 "message": "error",
                 "data": []
             }
+
+
+class IncidentDeleteSerializer(serializers.Serializer):
+
+    log_incident_id = serializers.IntegerField(required=True)
+
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
+    @staticmethod
+    def get_error_response():
+
+        return {
+            "status": 1,
+            "message": "Something went wrong with deletion.",
+            "data": []
+        }
+
+    def delete(self):
+        return Incident.objects.delete_incident(self.validated_data["log_incident_id"])

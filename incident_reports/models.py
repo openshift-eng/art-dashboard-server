@@ -26,6 +26,13 @@ class IncidentManager(models.Manager):
         incidents = self.filter().order_by('-log_incident_id').all()
         return json.loads(serializers.serialize('json', [incident for incident in incidents]))
 
+    def delete_incident(self, incident_id):
+        try:
+            self.filter(log_incident_id=incident_id).delete()
+            return 0
+        except Exception as e:
+            return 1
+
 
 class Incident(models.Model):
 
@@ -33,6 +40,7 @@ class Incident(models.Model):
         db_table = "log_incident"
 
     log_incident_id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=100, blank=False, null=False)
     description = models.TextField(blank=False, null=False)
     impact = models.TextField(blank=True, null=True)
     cause = models.TextField(blank=True, null=True)
