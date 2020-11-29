@@ -24,10 +24,16 @@ class OpenShiftCurrentAdvisoryManager(models.Manager):
         new_entries = []
 
         for advisory_type in current_advisories:
+
+            previous_advisory_id = None
+
+            if advisory_type in previous_advisories:
+                previous_advisory_id = previous_advisories[advisory_type]
+
             new_entry = OpenShiftCurrentAdvisory(openshift_version=branch_name,
                                                  advisory_type=advisory_type,
                                                  current_advisory_id=current_advisories[advisory_type],
-                                                 previous_advisory_id=previous_advisories[advisory_type],
+                                                 previous_advisory_id=previous_advisory_id,
                                                  current_advisory_sha=current_sha,
                                                  previous_advisory_sha=previous_sha)
             new_entries.append(new_entry)
@@ -67,7 +73,7 @@ class OpenShiftCurrentAdvisory(models.Model):
     openshift_version = models.CharField(max_length=50, null=False, blank=False)
     advisory_type = models.CharField(max_length=100, null=False, blank=False)
     current_advisory_id = models.CharField(max_length=20, null=False, blank=False)
-    previous_advisory_id = models.CharField(max_length=20, null=False, blank=False)
+    previous_advisory_id = models.CharField(max_length=20, null=True, blank=True)
     current_advisory_sha = models.CharField(max_length=200, null=False, blank=False, default="")
     previous_advisory_sha = models.CharField(max_length=200, null=False, blank=False, default="")
     objects = OpenShiftCurrentAdvisoryManager()
