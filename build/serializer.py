@@ -1,4 +1,5 @@
 from rest_framework import serializers
+import datetime
 
 
 class BuildSerializer(serializers.Serializer):
@@ -16,6 +17,18 @@ class BuildSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('where', 'limit', 'order_by')
+
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
+
+class DailyReportViewSerializer(serializers.Serializer):
+
+    start = serializers.DateField(required=False, default=datetime.datetime.today().date().strftime("%Y-%m-%d"))
+    end = serializers.DateField(required=False, default=datetime.datetime.today().date().strftime("%Y-%m-%d"))
 
     def update(self, instance, validated_data):
         pass

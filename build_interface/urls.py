@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     url('build/', include('build.urls'), name='build'),
     url('release/', include('ocp_build_data.urls'), name="release"),
-    url('health/', include('build_health.urls'), name='build_health'),
+    #url('health/', include('build_health.urls'), name='build_health'),
     url('autocomplete/', include('autocomplete.urls'), name='autocomplete'),
     url('errata/', include('errata.urls'), name='errata'),
     url('incident/', include('incident_reports.urls'), name='incident'),

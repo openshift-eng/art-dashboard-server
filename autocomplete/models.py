@@ -1,5 +1,5 @@
 from django.db import models
-from build_health.models import DailyBuildReport, UnixTimestampField
+from build.models import DailyBuildReport, UnixTimestampField
 
 # Create your models here.
 
