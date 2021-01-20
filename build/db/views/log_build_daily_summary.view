@@ -1,0 +1,2 @@
+create view log_build_daily_summary as select brew_faultCode as fault_code, date(build_time_iso) as date, dg_name, label_name, label_version, count(*) as count from log_build group by
+1,2,3,4,5;

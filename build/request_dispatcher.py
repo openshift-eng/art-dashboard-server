@@ -1,4 +1,4 @@
-from build_health.models import Build
+from .models import Build
 
 
 def handle_build_post_request(request_params):
@@ -19,10 +19,10 @@ def handle_build_post_request(request_params):
             if "sort_filter_column" in order_by and "sort_filter_order" in order_by:
                 order_by_string += " order by {} {}".format(order_by["sort_filter_column"], order_by["sort_filter_order"])
         else:
-            order_by_string += " order by iso_time desc"
+            order_by_string += " order by time_iso desc"
 
     else:
-        order_by_string += " order by iso_time desc"
+        order_by_string += " order by time_iso desc"
 
     for column in request_params:
         for column_condition in request_params[column]:
@@ -53,3 +53,19 @@ def handle_build_post_request(request_params):
 
     result = Build.objects.generate_build_data_for_ui(query_string)
     return {"status": "success", "message": "Data is ready.", "data": result}
+
+
+def daily_build_filter_view_get(request):
+
+    request_type = request.query_params.get("type", None)
+    date = request.query_params.get("date", None)
+
+    if request_type == "all":
+        return Build.objects.get_all_for_a_date(date)
+    elif request_type == "column_search":
+        column_name = request.query_params.get("name", None)
+        column_value = request.query_params.get("value", None)
+        if column_name:
+            return Build.objects.get_all_for_a_date_for_a_column(column_name, column_value, date)
+    else:
+        return {"error": "Invalid request."}
