@@ -24,7 +24,7 @@ pykerberos==1.2.1
 python-dateutil==2.8.1
 python-dotenv==0.13.0
 pytz==2020.1
-PyYAML==5.3.1
+PyYAML==5.4
 requests==2.24.0
 requests-kerberos==0.12.0
 s3transfer==0.3.3
