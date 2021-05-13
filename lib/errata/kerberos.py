@@ -15,9 +15,11 @@ def update_last_kinit_env_var():
 
     keytab_file = BASE_DIR + "/.keytab/redhat.keytab"
     print(keytab_file)
-    kinit_request = subprocess.Popen(["kinit", "-kt", keytab_file, "adtrived@REDHAT.COM"],
+    kinit_request = subprocess.Popen(["kinit", "-kt", keytab_file, "ocp-readonly/psi.redhat.com@REDHAT.COM"],
                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, error = kinit_request.communicate()
+    if error:
+        print(error)
     os.environ["LAST_KINIT_TIME"] = str(int(time.time()))
 
 
