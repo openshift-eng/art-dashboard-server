@@ -1,37 +1,15 @@
 from rest_framework import generics
-from .serializer import BuildSerializer
+from .serializer import BuildSerializer, DailyReportViewSerializer
 from rest_framework.response import Response
-from lib.aws.sdb import SimpleDBClientManagerPool
-from django.http import HttpResponse
 import json
-from .request_dispatcher import handle_build_post_request
+from .request_dispatcher import handle_build_post_request, daily_build_filter_view_get
+from .models import DailyBuildReport
+
 
 # Create your views here.
 
 
-class BuildView(generics.CreateAPIView, generics.ListAPIView):
-
-    serializer_class = BuildSerializer
-
-    def get(self, request, *args, **kwargs):
-        return HttpResponse("<h1>Hello</h1>")
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            data = serializer.data
-            poolManager = SimpleDBClientManagerPool()
-            client_manager = poolManager.acquire()
-            select_response = client_manager.run_select(data)
-            poolManager.release(client_manager)
-            response = Response(data=select_response)
-            return response
-        else:
-            response = Response(data={"body": ["missing fields", serializer.errors]})
-            return response
-
-
-class BuildView1(generics.CreateAPIView):
+class BuildView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
 
@@ -52,3 +30,34 @@ class BuildView1(generics.CreateAPIView):
         response = handle_build_post_request(post_data)
 
         return Response(data=response)
+
+
+class DailyBuildReportView(generics.CreateAPIView):
+
+    serializer_class = DailyReportViewSerializer
+
+    def get(self, request, *args, **kwargs):
+
+        request_type = request.query_params.get("type", None)
+        date = request.query_params.get("date", None)
+
+        if request_type:
+            return Response(
+                data={"status": "success",
+                      "data": DailyBuildReport.objects.handle_request_for_daily_report_view_get(request_type, date),
+                      "message": "Data is ready."})
+        else:
+            return Response(data={"status": "error", "message": "Request type missing.", "data": None})
+
+
+class DailyBuildFilterView(generics.ListAPIView):
+
+    def get(self, request, *args, **kwargs):
+
+        request_type = request.query_params.get("type", None)
+        date = request.query_params.get("date", None)
+
+        if request_type and date:
+            return Response({"status": "success", "data": daily_build_filter_view_get(request)})
+        else:
+            return Response({"status": "fail", "message": "Missing url params,", "data": []})
