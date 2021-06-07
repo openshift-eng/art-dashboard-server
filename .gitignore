@@ -1,12 +1,5 @@
+__pycache__/
+*.pyc
 venv/
 .idea/
-build/__pycache__/
-build_interface/__pycache__/
-build_health/__pycache__/
-conf/dev.env
-lib/build_reports/__pycache__/
-ocp_build_data/__pycache__/
-lib/__pycache__/
-autocomplete/__pycache__/
-lib/aws/__pycache__/
 .aws/
