@@ -1,2 +1,0 @@
-yum install -y python36-devel.x86_64
-yum install mysql-community-devel.x86_64

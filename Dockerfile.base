@@ -1,0 +1,9 @@
+FROM registry.redhat.io/ubi7/python-36:latest
+USER root
+RUN yum -y --setopt skip_missing_names_on_install=False \
+    install krb5-workstation krb5-devel openssl-devel cronie \
+ && yum clean all
+WORKDIR /opt/app-root/src
+COPY requirements.txt ./
+RUN pip3 install -r requirements.txt
+EXPOSE 8080

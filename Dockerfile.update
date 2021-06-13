@@ -1,0 +1,6 @@
+FROM art-dashboard-server:base
+COPY . .
+RUN pip3 install -r requirements.txt
+RUN python3 manage.py migrate
+RUN echo "$(echo '00 06 * * * sh ./cron_jobs/data_import.sh' ; crontab -l)" | crontab -
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:8080", "--noreload"]
