@@ -128,19 +128,10 @@ def handle_mismatch_of_current_advisory_ids(branch_name, advisories):
 
 def is_this_an_advisory_update_commit(commit):
 
-    commit_message_have_words = ['group.yml', 'advisory', 'advisories', 'update', 'group', 'yml']
     commit_message = commit["commit"]["message"]
-    commit_message = commit_message.split(" ")
-    word_match_count = 0
-    for word in commit_message:
-        for commit_message_have_word in commit_message_have_words:
-            if word.lower()  in commit_message_have_word:
-                word_match_count += 1
-                break
-
-    if word_match_count >= 3:
-        return True
-    return False
+    # ideally we would search for tags or something, but for now...
+    watch_phrases = ["Prepare release", "Update advisories"]
+    return any(phrase in commit_message for phrase in watch_phrases)
 
 
 def find_current_advisory(commits, current_advisories):
