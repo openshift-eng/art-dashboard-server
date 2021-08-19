@@ -54,6 +54,7 @@ ALLOWED_HOSTS = ['buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com',
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'incident_reports',
     'build_health',
     'build',
@@ -68,6 +69,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ]
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
