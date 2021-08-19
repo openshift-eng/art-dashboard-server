@@ -47,7 +47,8 @@ SECRET_KEY = os.getenv(
 DEBUG = True
 
 ALLOWED_HOSTS = ['buildinterfaceserver-art-build-dev.cloud.paas.psi.redhat.com', '127.0.0.1', 'localhost',
-                 'buildinterfaceserver-art-jenkins.cloud.paas.psi.redhat.com']
+                 'buildinterfaceserver-art-jenkins.cloud.paas.psi.redhat.com',
+                 'art-dashboard-server-1-art-build-dev.apps.ocp4.prod.psi.redhat.com']
 
 
 # Application definition
