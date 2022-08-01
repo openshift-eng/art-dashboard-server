@@ -25,4 +25,5 @@ urlpatterns = [
     url('autocomplete/', include('autocomplete.urls'), name='autocomplete'),
     url('errata/', include('errata.urls'), name='errata'),
     url('incident/', include('incident_reports.urls'), name='incident'),
+    url('api/v1/', include('api.urls')),
 ]
