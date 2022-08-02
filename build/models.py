@@ -126,6 +126,4 @@ class Build(models.Model):
     env_KUBE_GIT_TREE_STATE = models.CharField(max_length=1000, blank=True, null=True)
     label_io_openshift_build_versions = models.CharField(max_length=1000, blank=True, null=True)
     label_io_openshift_s2i_scripts_url = models.CharField(max_length=1000, blank=True, null=True)
-    created_at = UnixTimestampField(auto_created=True, null=True)
-    updated_at = UnixTimestampField(auto_created=True, null=True)
     objects = BuildManager()
