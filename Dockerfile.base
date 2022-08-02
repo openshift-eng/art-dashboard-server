@@ -6,4 +6,5 @@ RUN yum -y --setopt skip_missing_names_on_install=False \
 WORKDIR /opt/app-root/src
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
+COPY conf/krb5-redhat.conf /etc/krb5.conf
 EXPOSE 8080
