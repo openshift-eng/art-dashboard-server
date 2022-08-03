@@ -1,6 +1,7 @@
 # ART-API
 
-Base URL: ```http://art-dash-server-aos-art-web.apps.ocp4.prod.psi.redhat.com```
+Prod Base URL: ```http://art-dash-server-aos-art-web.apps.ocp4.prod.psi.redhat.com```<br>
+Dev Base URL: ```http://localhost:8080```
 
 ### GET /api/v1/builds
 Prints all the build details. Results are paginated, per page 100 results. <br><br>
@@ -12,7 +13,7 @@ Eg:
     "previous": null,
     "results": [
         {
-            "url": "http://art-dash-server-aos-art-web.apps.ocp4.prod.psi.redhat.com/api/v1/builds/1/",
+            "url": "http://localhost:8080/api/v1/builds/1/",
             "env_OS_GIT_MAJOR": 4,
             "build_0_package_id": null,
             "time_unix": 1629484778550,
