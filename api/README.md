@@ -2,7 +2,7 @@
 
 Base URL: ```http://art-dash-server-aos-art-web.apps.ocp4.prod.psi.redhat.com```
 
-### GET /api/vi/builds
+### GET /api/v1/builds
 Prints all the build details. Results are paginated, per page 100 results. <br><br>
 Eg:
 ```
