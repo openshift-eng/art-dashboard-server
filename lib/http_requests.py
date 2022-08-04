@@ -68,10 +68,15 @@ def get_github_rate_limit_status():
     return hit_response
 
 
+def get_http_data(url):
+    response = requests.get(url, headers=HEADERS)
+    yml_data = yaml.load(response.text, Loader=yaml.Loader)
+    return yml_data
+
+
 def get_advisories(branch_name):
-    yml_file = os.environ["GITHUB_RAW_CONTENT_URL"].format(branch_name)
-    response = requests.get(yml_file, headers=HEADERS)
-    yml_data = yaml.load(response.text, Loader=yaml.Loader)['releases']
+    url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/releases.yml"
+    yml_data = get_http_data(url)['releases']
 
     advisory_data = []
     for version in yml_data:
@@ -89,6 +94,12 @@ def get_advisories(branch_name):
 
 
 def get_branch_advisory_ids(branch_name):
+    if branch_name.split('-')[-1] in ["3.11", "4.5"]:  # versions which do not have releases.yml
+        url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/group.yml"
+        yml_data = get_http_data(url)['advisories']
+
+        return {"current": yml_data, "previous": {}}
+
     hit_response = get_advisories(branch_name)
 
     return {"current": hit_response[0][1], "previous": hit_response[1][1]}
