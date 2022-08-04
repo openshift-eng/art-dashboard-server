@@ -9,7 +9,8 @@ import traceback
 import os
 import yaml
 import time
-from ocp_build_data.models import OpenShiftCurrentAdvisory
+
+HEADERS = {"Authorization": f"token {os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']}"}
 
 
 def get_all_ocp_build_data_branches():
@@ -19,7 +20,7 @@ def get_all_ocp_build_data_branches():
     """
 
     try:
-        req = requests.get(app_constants.GITHUB_URL_TO_LIST_ALL_OCP_BUILD_DATA_BRANCHES)
+        req = requests.get(app_constants.GITHUB_URL_TO_LIST_ALL_OCP_BUILD_DATA_BRANCHES, headers=HEADERS)
         branches = req.json()
         branches_data = []
 
@@ -47,11 +48,6 @@ def get_all_ocp_build_data_branches():
         return []
 
 
-def get_branch_details_for_ocp_build_data(branch_name):
-    branch_group_yml_url = get_group_yml_file_url(branch_name)
-    return branch_group_yml_url
-
-
 def get_group_yml_file_url(branch_name: str) -> dict:
     """
     This method takes a branch name of ocp_build_data as a parameter and returns advisories details for the same.
@@ -59,12 +55,12 @@ def get_group_yml_file_url(branch_name: str) -> dict:
     :return: adivsories details
     """
     hit_url = app_constants.GITHUB_GROUP_YML_CONTENTS_URL.format(branch_name)
-    hit_request = requests.get(hit_url)
+    hit_request = requests.get(hit_url, headers=HEADERS)
     return hit_request.json()["download_url"]
 
 
 def get_github_rate_limit_status():
-    hit_request = requests.get(os.environ["GITHUB_RATELIMIT_ENDPOINT"])
+    hit_request = requests.get(os.environ["GITHUB_RATELIMIT_ENDPOINT"], headers=HEADERS)
     hit_response = hit_request.json()
     hit_response = hit_response["rate"]
     hit_response["reset_secs"] = hit_response["reset"] - time.time()
@@ -72,18 +68,9 @@ def get_github_rate_limit_status():
     return hit_response
 
 
-def get_advisory_ids_from_sha(sha):
-    group_yml_url = os.environ["GITHUB_RAW_CONTENT_URL"].format(sha)
-    hit_request = requests.get(group_yml_url)
-    hit_response = yaml.load(hit_request.text)
-    if "advisories" in hit_response:
-        return hit_response["advisories"]
-    return {}
-
-
 def get_advisories(branch_name):
-    yml_file = f"https://raw.githubusercontent.com/openshift/ocp-build-data/{branch_name}/releases.yml"
-    response = requests.get(yml_file)
+    yml_file = os.environ["GITHUB_RAW_CONTENT_URL"].format(branch_name)
+    response = requests.get(yml_file, headers=HEADERS)
     yml_data = yaml.load(response.text, Loader=yaml.Loader)['releases']
 
     advisory_data = []
@@ -93,8 +80,8 @@ def get_advisories(branch_name):
             brew_event = yml_data[version]['assembly']['basis']['brew_event']
         except:
             continue
-        # advisory_data += list(advisories)
-        if -1 in advisories or 1 in advisories:
+
+        if -1 in advisories.values() or 1 in advisories.values():
             continue
         advisory_data.append([brew_event, advisories])
 
@@ -104,18 +91,4 @@ def get_advisories(branch_name):
 def get_branch_advisory_ids(branch_name):
     hit_response = get_advisories(branch_name)
 
-    if hit_response:
-        if not OpenShiftCurrentAdvisory.objects.check_if_current_advisories_match(branch_name=branch_name,
-                                                                                  advisories=hit_response):
-            OpenShiftCurrentAdvisory.objects.delete_old_entries_and_create_new(branch_name=branch_name,
-                                                                               advisories=hit_response)
-
     return {"current": hit_response[0][1], "previous": hit_response[1][1]}
-
-
-def get_commits_for_groupyml(branch_name):
-    url = os.environ["GITHUB_ALL_COMMITS_GROUPYML"].format(branch_name)
-    hit_request = requests.get(url)
-
-    commits = hit_request.json()
-    return commits
