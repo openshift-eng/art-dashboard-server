@@ -3,23 +3,24 @@ from datetime import datetime
 from time import strftime
 from .managers import BuildManager, DailyBuildReportManager
 
+
 # Create your models here.
 
 
 class UnixTimestampField(models.DateTimeField):
-
     """UnixTimestampField: creates a DateTimeField that is represented on the
     database as a TIMESTAMP field rather than the usual DATETIME field.
     """
+
     def __init__(self, null=False, blank=False, **kwargs):
         super(UnixTimestampField, self).__init__(**kwargs)
         # default for TIMESTAMP is NOT NULL unlike most fields, so we have to
         # cheat a little:
         self.blank, self.isnull = blank, null
-        self.null = True # To prevent the framework from shoving in "not null".
+        self.null = True  # To prevent the framework from shoving in "not null".
 
     def db_type(self, connection):
-        typ=['TIMESTAMP']
+        typ = ['TIMESTAMP']
         # See above!
         if self.isnull:
             typ += ['NULL']
@@ -34,14 +35,13 @@ class UnixTimestampField(models.DateTimeField):
             return models.DateTimeField.to_python(self, value)
 
     def get_db_prep_value(self, value, connection, prepared=False):
-        if value==None:
+        if value is None:
             return None
         # Use '%Y%m%d%H%M%S' for MySQL < 4.1
         return strftime('%Y-%m-%d %H:%M:%S', value.timetuple())
 
 
 class DailyBuildReport(models.Model):
-
     class Meta:
         db_table = "log_build_daily_summary"
         managed = False
@@ -60,7 +60,6 @@ class DailyBuildReport(models.Model):
 
 
 class Build(models.Model):
-
     """
     This class represents the build record table which holds all the
     build records that are dumped in SimpleDB. Let SimpleDB be there.

@@ -1,8 +1,7 @@
-from .models import Build
+from .models import Build, DailyBuildReport
 
 
 def handle_build_post_request(request_params):
-
     request_params = dict(request_params)
 
     order_by = None
@@ -17,7 +16,8 @@ def handle_build_post_request(request_params):
 
         if len(order_by) != 0 and len(order_by) == 2:
             if "sort_filter_column" in order_by and "sort_filter_order" in order_by:
-                order_by_string += " order by {} {}".format(order_by["sort_filter_column"], order_by["sort_filter_order"])
+                order_by_string += " order by {} {}".format(order_by["sort_filter_column"],
+                                                            order_by["sort_filter_order"])
         else:
             order_by_string += " order by time_iso desc"
 
@@ -47,7 +47,7 @@ def handle_build_post_request(request_params):
         query_string = "select * from log_build " + order_by_string + " limit 200"
     else:
         where_string = "where " + where_string[:-4]
-        query_string = "select * from log_build " + where_string + order_by_string
+        query_string = "select * from log_build " + where_string + order_by_string + " limit 200"
 
     print(query_string)
 
@@ -56,7 +56,6 @@ def handle_build_post_request(request_params):
 
 
 def daily_build_filter_view_get(request):
-
     request_type = request.query_params.get("type", None)
     date = request.query_params.get("date", None)
 
