@@ -76,21 +76,25 @@ def get_http_data(url):
 
 def get_advisories(branch_name):
     url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/releases.yml"
-    yml_data = get_http_data(url)['releases']
 
-    advisory_data = []
-    for version in yml_data:
-        try:
-            advisories = yml_data[version]['assembly']['group']['advisories']
-            brew_event = yml_data[version]['assembly']['basis']['brew_event']
-        except:
-            continue
+    try:
+        yml_data = get_http_data(url)['releases']
 
-        if -1 in advisories.values() or 1 in advisories.values():
-            continue
-        advisory_data.append([brew_event, advisories])
+        advisory_data = []
+        for version in yml_data:
+            try:
+                advisories = yml_data[version]['assembly']['group']['advisories']
+                brew_event = yml_data[version]['assembly']['basis']['brew_event']
+            except:
+                continue
 
-    return sorted(advisory_data, key=lambda x: x[0], reverse=True)
+            if -1 in advisories.values() or 1 in advisories.values():
+                continue
+            advisory_data.append([brew_event, advisories])
+
+        return sorted(advisory_data, key=lambda x: x[0], reverse=True)
+    except:
+        return None
 
 
 def get_branch_advisory_ids(branch_name):
@@ -100,6 +104,8 @@ def get_branch_advisory_ids(branch_name):
 
         return {"current": yml_data, "previous": {}}
 
-    hit_response = get_advisories(branch_name)
+    advisories = get_advisories(branch_name)
 
-    return {"current": hit_response[0][1], "previous": hit_response[1][1]}
+    if advisories:
+        return {"current": advisories[0][1], "previous": advisories[1][1]}
+    return {"current": {}, "previous": {}}
