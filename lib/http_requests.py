@@ -93,7 +93,7 @@ def get_advisories(branch_name):
             advisory_data.append([brew_event, advisories])
 
         return sorted(advisory_data, key=lambda x: x[0], reverse=True)
-    except:
+    except Exception:
         return None
 
 
