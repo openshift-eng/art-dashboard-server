@@ -74,27 +74,83 @@ def get_http_data(url):
     return yml_data
 
 
-def get_advisories(branch_name):
-    url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/releases.yml"
-
+def get_particular_advisory(data):
+    """
+    Function to get the advisories from a particular z-stream release
+    :data: The data of a particular version
+    """
     try:
-        yml_data = get_http_data(url)['releases']
-
-        advisory_data = []
-        for version in yml_data:
-            try:
-                advisories = yml_data[version]['assembly']['group']['advisories']
-                brew_event = yml_data[version]['assembly']['basis']['brew_event']
-            except:
-                continue
-
-            if -1 in advisories.values() or 1 in advisories.values():
-                continue
-            advisory_data.append([brew_event, advisories])
-
-        return sorted(advisory_data, key=lambda x: x[0], reverse=True)
+        advisories = data['assembly']['group']['advisories']
+        if -1 in advisories.values() or 1 in advisories.values():
+            return None
     except Exception:
         return None
+
+    return advisories
+
+
+def get_brew_event_id(data):
+    """
+    Function to get the brew_event id from the releases.yml file
+    :data: The yml for a particular z-stream release
+    """
+    try:
+        brew_event_id = data['assembly']['basis']['brew_event']
+        return brew_event_id
+    except KeyError:
+        return None
+
+
+def get_advisories(branch_name):
+    url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/releases.yml"
+    seen = {}  # variable to keep track of already processed openshift versions.
+    yml_data = get_http_data(url).get('releases', None)
+
+    if not yml_data:
+        return None
+
+    advisory_data = []
+    index = 0  # variable to sort by latest versions
+    for version in yml_data:
+        if version in seen:
+            continue  # If we have already included the advisories of a version
+
+        try:
+            _ = yml_data[version]['assembly']['basis']
+        except KeyError:
+            continue  # To make sure assembly and basis keys are present. Eg art3171 in 4.7 does not have those.
+
+        brew_event_id = get_brew_event_id(yml_data[version])
+
+        flag = False  # flag to check if a child that inherits has advisories, in case that has precedence
+        counter = 0  # counter to prevent infinite loops
+        while not brew_event_id:
+            counter += 1
+            if counter == 1000:  # Set maximum recursion depth
+                break
+
+            advisories = get_particular_advisory(yml_data[version])
+            if advisories:
+                index += 1
+                advisory_data.append([index, version, advisories])
+                flag = True
+                break  # exit if advisories exist even though child inherits
+            else:
+                version = yml_data[version]['assembly']['basis']['assembly']  # get the parent version number
+                brew_event_id = get_brew_event_id(yml_data[version])  # update the brew_event id
+
+        if version not in seen:
+            seen[version] = 1  # add version to seen as we have processed the advisories
+
+        if flag:
+            continue  # continue if inherited child has advisories, which is already processed in the while loop
+
+        advisories = get_particular_advisory(yml_data[version])
+        if advisories:
+            index += 1
+            advisory_data.append([index, version, advisories])
+
+    return sorted(advisory_data, key=lambda x: x[0])
 
 
 def get_branch_advisory_ids(branch_name):
@@ -107,5 +163,5 @@ def get_branch_advisory_ids(branch_name):
     advisories = get_advisories(branch_name)
 
     if advisories:
-        return {"current": advisories[0][1], "previous": advisories[1][1]}
+        return {"current": advisories[0][-1], "previous": advisories[1][-1]}
     return {"current": {}, "previous": {}}
