@@ -5,6 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from api.image_pipeline import pipeline_image_names
+from api.pr_in import nightly as nighlty_main
 import json
 
 
@@ -80,3 +81,22 @@ def pipeline_from_github_api_endpoint(request):
     jsonstr = json.loads(json.dumps(result, default=lambda o: o.__dict__))
 
     return Response(jsonstr, status=status_code)
+
+
+@api_view(['GET'])
+def pr_in_nightly(request):
+    arch = request.query_params.get("arch", None)
+    version = request.query_params.get("version", None)
+    repo = request.query_params.get("repo", None)
+    pr = request.query_params.get("pr", None)
+    commit = request.query_params.get("commit", None)
+
+    if arch and version and repo and (pr or commit):
+        result, status_code = nighlty_main.pr_in_nightly(arch, version, repo, pr, commit)
+    else:
+        result, status_code = {
+                                  "status": "error",
+                                  "payload": "Invalid Input"
+                              }, 400
+
+    return Response(result, status=status_code)
