@@ -1,8 +1,8 @@
-from django.conf.urls import url
+from django.urls import re_path
 from .views import BuildView, DailyBuildReportView, DailyBuildFilterView
 
 urlpatterns = [
-    url(r'^$', BuildView.as_view(), name='build_view'),
-    url('daily/', DailyBuildReportView.as_view(), name='daily_build_requests'),
-    url('build_records/', DailyBuildFilterView.as_view(), name="daily_build_filter_view"),
+    re_path(r'^$', BuildView.as_view(), name='build_view'),
+    re_path('daily/', DailyBuildReportView.as_view(), name='daily_build_requests'),
+    re_path('build_records/', DailyBuildFilterView.as_view(), name="daily_build_filter_view"),
 ]
