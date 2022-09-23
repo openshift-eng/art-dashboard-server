@@ -53,6 +53,7 @@ RUN groupadd --gid "$USER_GID" "$USERNAME" \
 USER "$USER_UID"
 WORKDIR /workspaces/art-dash
 
+USER 0
 # install dependencies (allow even openshift's random user to see)
 ENV PATH=/home/"$USERNAME"/.local/bin:/home/"$USERNAME"/bin:"$PATH"
 COPY requirements.txt ./
@@ -64,12 +65,9 @@ RUN umask a+rx && pip3 install --upgrade \
 # install art-dash and default configs
 COPY conf/krb5-redhat.conf /etc/krb5.conf
 COPY . /tmp/art-dash
-USER 0
 RUN cp -r /tmp/art-dash/umb . \
  && cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
  && cp /tmp/art-dash/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
-# && cp /tmp/art-dash/settings.yaml /home/"$USERNAME"/.config/art-dash/settings.yaml \
  && rm -rf /tmp/art-dash
-USER "$USER_UID"
 EXPOSE 8080
-CMD ["./start-cmd.sh"]
+USER "$USER_UID"
