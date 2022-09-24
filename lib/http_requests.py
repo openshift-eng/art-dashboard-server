@@ -102,6 +102,12 @@ def get_brew_event_id(data):
 
 
 def get_advisories(branch_name):
+    """
+    Gets the list of advisories from the releases.yml file of an openshift release.
+    :param branch_name: Openshift branch name in ocp-build-data. eg: openshift-4.10
+    :returns: List of lists containing the advisories with the z-stream version. Eg:
+                            [['4.11.6', {'extras': 102175, 'image': 102174, 'metadata': 102177, 'rpm': 102173}], ... ]
+    """
     url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/releases.yml"
     seen = {}  # variable to keep track of already processed openshift versions.
     yml_data = get_http_data(url).get('releases', None)
@@ -110,7 +116,6 @@ def get_advisories(branch_name):
         return None
 
     advisory_data = []
-    index = 0  # variable to sort by latest versions
     for version in yml_data:
         if version in seen:
             continue  # If we have already included the advisories of a version
@@ -122,18 +127,17 @@ def get_advisories(branch_name):
 
         brew_event_id = get_brew_event_id(yml_data[version])
 
-        flag = False  # flag to check if a child that inherits has advisories, in case that has precedence
-        counter = 0  # counter to prevent infinite loops
+        has_advisories = False  # flag to check if a child that inherits has advisories, in case that has precedence
+        recursion_depth = 0  # counter to prevent infinite loops
         while not brew_event_id:
-            counter += 1
-            if counter == 1000:  # Set maximum recursion depth
+            recursion_depth += 1
+            if recursion_depth == 1000:  # Set maximum recursion depth
                 break
 
             advisories = get_particular_advisory(yml_data[version])
             if advisories:
-                index += 1
-                advisory_data.append([index, version, advisories])
-                flag = True
+                advisory_data.append([version, advisories])
+                has_advisories = True
                 break  # exit if advisories exist even though child inherits
             else:
                 version = yml_data[version]['assembly']['basis']['assembly']  # get the parent version number
@@ -142,15 +146,14 @@ def get_advisories(branch_name):
         if version not in seen:
             seen[version] = 1  # add version to seen as we have processed the advisories
 
-        if flag:
+        if has_advisories:
             continue  # continue if inherited child has advisories, which is already processed in the while loop
 
         advisories = get_particular_advisory(yml_data[version])
         if advisories:
-            index += 1
-            advisory_data.append([index, version, advisories])
+            advisory_data.append([version, advisories])
 
-    return sorted(advisory_data, key=lambda x: x[0])
+    return advisory_data
 
 
 def get_branch_advisory_ids(branch_name):
