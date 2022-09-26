@@ -257,7 +257,7 @@ def brew_to_delivery(brew_package_name: str, variant: str, brew_object) -> list:
 
 
 
-@util.cached
+# @util.cached
 def doozer_brew_distgit(version: str) -> list:
     output = util.cmd_gather(
         f"doozer --disable-gssapi -g openshift-{version} images:print --short '{{component}}: {{name}}'")
@@ -564,7 +564,7 @@ def get_image_stream_tag(distgit_name: str, version: str) -> str:
         return tag[4:] if tag.startswith("ose-") else tag  # remove 'ose-' if present
 
 
-@util.cached
+# @util.cached
 def doozer_github_distgit(version: str) -> list:
     """
     Function to get the distgit to GitHub mappings from doozer

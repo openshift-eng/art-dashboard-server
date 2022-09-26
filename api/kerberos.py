@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 
 def do_kinit():
@@ -6,10 +7,11 @@ def do_kinit():
     Function performs kinit with the already mounted keytab
     :return: None
     """
-
-    keytab_file = "/tmp/keytab/redhat.keytab"
-    kinit_request = subprocess.Popen(["kinit", "-kt", keytab_file, "ocp-readonly/psi.redhat.com@REDHAT.COM"],
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, error = kinit_request.communicate()
-    if error:
-        print(f"Kerberos error: {error}")
+    if os.environ['RUN_ENV'] == 'production':
+        keytab_file = os.environ['KERBEROS_KEYTAB']
+        principal = os.environ['KERBEROS_PRINCIPAL']
+        kinit_request = subprocess.Popen(["kinit", "-kt", keytab_file, principal],
+                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = kinit_request.communicate()
+        if error:
+            print(f"Kerberos error: {error}")

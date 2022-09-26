@@ -2,8 +2,10 @@ import requests
 import json
 from api import util as api_util
 from api.pr_in import util
+from api import util as util_main
 
 
+@util_main.refresh_krb_auth
 def commit_in_pullspec(commits, pull_spec, repo):
     rc, stdout, stderr = api_util.cmd_gather(f"oc adm release info {pull_spec} --commits -o json")
 

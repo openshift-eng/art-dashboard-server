@@ -100,3 +100,11 @@ def pr_in_nightly(request):
                               }, 400
 
     return Response(result, status=status_code)
+
+
+@api_view(['GET'])
+def test(request):
+    return Response({
+        "status": "success",
+        "payload": "Setup successful"
+    }, status=200)
