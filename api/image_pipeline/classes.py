@@ -38,5 +38,5 @@ class CDN:
 class Delivery:
     def __init__(self):
         self.delivery_repo_id = ""
-        self.delivery_repo = ""
+        self.delivery_repo_name = ""
         self.delivery_repo_url = ""

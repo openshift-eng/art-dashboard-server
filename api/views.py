@@ -54,7 +54,7 @@ def pipeline_from_github_api_endpoint(request):
                                                             "variant_id": int,
                                                             "delivery": {
                                                                 "delivery_repo_id": str,
-                                                                "delivery_repo": str,
+                                                                "delivery_repo_name": str,
                                                                 "delivery_repo_url": str}}]}}]}}
 
     """

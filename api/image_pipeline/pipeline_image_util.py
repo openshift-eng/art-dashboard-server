@@ -6,6 +6,7 @@ from api import util, exceptions
 from typing import Union
 from api.image_pipeline.classes import Github, Distgit, Brew, CDN, Delivery
 
+
 # Functions for pipeline from GitHub
 def github_repo_is_available(repo_name: str) -> bool:
     """
@@ -81,7 +82,7 @@ def distgit_to_brew(distgit_name: str, version: str) -> str:
         return brew_name
 
 
-def distgit_to_delivery(distgit_repo_name: str, version: str, variant: str) -> dict:
+def distgit_to_delivery(distgit_repo_name: str, version: str, variant: str) -> Brew:
     """
     Driver function for distgit -> delivery pipeline.
 
@@ -100,8 +101,6 @@ def distgit_to_delivery(distgit_repo_name: str, version: str, variant: str) -> d
     brew_object.bundle_component = 'None'
     brew_object.bundle_distgit = 'None'
     brew_object.payload_tag = 'None'
-
-
 
     # Bundle Builds
     if require_bundle_build(distgit_repo_name, version):
@@ -138,7 +137,7 @@ def brew_is_available(brew_name: str) -> bool:
         return False
 
 
-def brew_to_github(brew_name: str, version: str) -> dict:
+def brew_to_github(brew_name: str, version: str) -> tuple[Github, Distgit, Brew]:
     """
     Driver function for Brew -> GitHub pipeline
 
@@ -237,7 +236,7 @@ def brew_to_cdn(brew_name: str, variant_name: str) -> list:
     return results
 
 
-def brew_to_delivery(brew_package_name: str, variant: str, brew_object) -> list:
+def brew_to_delivery(brew_package_name: str, variant: str, brew_object) -> None:
     """
     Driver function for Brew -> Delivery pipeline
 
@@ -254,7 +253,6 @@ def brew_to_delivery(brew_package_name: str, variant: str, brew_object) -> list:
         cdn_object.delivery = cdn_to_delivery_payload(cdn_repo_name)
 
         brew_object.cdn += [cdn_object]
-
 
 
 # @util.cached
@@ -400,7 +398,7 @@ def get_product_id(variant_id: int) -> int:
         raise exceptions.ProductIdNotFound(f"Product ID not found for variant `{variant_id}`")
 
 
-def cdn_to_github(cdn_name: str, version: str) -> dict:
+def cdn_to_github(cdn_name: str, version: str) -> tuple[Github, Distgit, Brew]:
     """
     Driver function for the CDN -> GitHub pipeline
 
@@ -421,7 +419,7 @@ def cdn_to_github(cdn_name: str, version: str) -> dict:
     return github_object, distgit_object, brew_object
 
 
-def get_cdn_payload(cdn_repo_name: str, variant: str) -> dict:
+def get_cdn_payload(cdn_repo_name: str, variant: str) -> CDN:
     """
     Function to get the CDN payload for slack (since it's needed in multiple places.
 
@@ -441,6 +439,7 @@ def get_cdn_payload(cdn_repo_name: str, variant: str) -> dict:
 
     return cdn_object
 
+
 def cdn_to_delivery_payload(cdn_repo_name: str):
     """
     Function to get the CDN payload for slack (since it's needed in multiple places.
@@ -452,10 +451,11 @@ def cdn_to_delivery_payload(cdn_repo_name: str):
 
     delivery_object = Delivery()
     delivery_object.delivery_repo_id = delivery_repo_id
-    delivery_object.delivery_repo = delivery_repo_name
+    delivery_object.delivery_repo_name = delivery_repo_name
     delivery_object.delivery_repo_url = f"https://comet.engineering.redhat.com/containers/repositories/{delivery_repo_id}"
 
     return delivery_object
+
 
 # Delivery stuff
 def delivery_repo_is_available(name: str) -> bool:

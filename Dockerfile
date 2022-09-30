@@ -12,7 +12,7 @@ RUN curl -o /etc/pki/ca-trust/source/anchors/RH-IT-Root-CA.crt --fail -L \
  && dnf install -y \
     # runtime dependencies
     krb5-workstation git rsync \
-    python3.6 python3-certifi python3-rpm python3-rhmsg \
+    python3 python3-certifi python3-rpm python3-rhmsg \
     # development dependencies
     gcc krb5-devel python3-devel python3-pip \
     # other tools
@@ -56,6 +56,7 @@ WORKDIR /workspaces/art-dash
 USER 0
 # install dependencies (allow even openshift's random user to see)
 ENV PATH=/home/"$USERNAME"/.local/bin:/home/"$USERNAME"/bin:"$PATH"
+ENV HOME=/home/dev
 COPY requirements.txt ./
 RUN umask a+rx && pip3 install --upgrade \
     git+https://github.com/openshift/doozer.git#egg=rh-doozer \
@@ -65,6 +66,7 @@ RUN umask a+rx && pip3 install --upgrade \
 # install art-dash and default configs
 COPY conf/krb5-redhat.conf /etc/krb5.conf
 COPY . /tmp/art-dash
+USER 0
 RUN cp -r /tmp/art-dash/umb . \
  && cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
  && cp /tmp/art-dash/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \

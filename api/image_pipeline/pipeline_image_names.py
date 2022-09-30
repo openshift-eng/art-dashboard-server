@@ -221,7 +221,7 @@ def pipeline_from_delivery(delivery_repo_name, version) -> Tuple[Dict[str, str],
 
         delivery_object = Delivery()
         delivery_object.delivery_repo_id = delivery_repo_id
-        delivery_object.delivery_repo = delivery_repo_name
+        delivery_object.delivery_repo_name = delivery_repo_name
         delivery_object.delivery_repo_url = f"https://comet.engineering.redhat.com/containers/repositories/{delivery_repo_id}"
 
         cdn_object.delivery = delivery_object
