@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from api.image_pipeline import pipeline_image_names
 from api.pr_in import nightly as nighlty_main
+from api.translate_names import translate_names
 import json
 
 
@@ -93,6 +94,25 @@ def pr_in_nightly(request):
 
     if arch and version and repo and (pr or commit):
         result, status_code = nighlty_main.pr_in_nightly(arch, version, repo, pr, commit)
+    else:
+        result, status_code = {
+                                  "status": "error",
+                                  "payload": "Invalid Input"
+                              }, 400
+
+    return Response(result, status=status_code)
+
+
+@api_view(['GET'])
+def translate_names_view(request):
+    name_type = request.query_params.get("name_type", None)
+    name = request.query_params.get("name", None)
+    name_type2 = request.query_params.get("name_type2", None)
+    major = request.query_params.get("major", None)
+    minor = request.query_params.get("minor", None)
+
+    if name_type and name and name_type2:
+        result, status_code = translate_names.translate_names_main(name_type, name, name_type2, major, minor)
     else:
         result, status_code = {
                                   "status": "error",
