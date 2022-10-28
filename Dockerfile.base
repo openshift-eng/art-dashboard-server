@@ -56,7 +56,7 @@ WORKDIR /workspaces/art-dash
 USER 0
 # install dependencies (allow even openshift's random user to see)
 ENV PATH=/home/"$USERNAME"/.local/bin:/home/"$USERNAME"/bin:"$PATH"
-ENV HOME=/home/dev
+ENV HOME=/home/"$USERNAME"
 COPY requirements.txt ./
 RUN umask a+rx && pip3 install --upgrade \
     git+https://github.com/openshift/doozer.git#egg=rh-doozer \

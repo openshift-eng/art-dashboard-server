@@ -2,8 +2,7 @@ import requests
 import unittest
 
 # Test deployment at art-build-dev Openshift namespace
-# If local, set SERVER = "http://localhost:8080"
-SERVER = "http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com"
+SERVER = "http://localhost:8080"
 API = f"{SERVER}/api/v1"
 
 
@@ -24,25 +23,25 @@ class TestGithub(unittest.TestCase):
         assert self.response.status_code == 200
 
     def test_2(self):
-        assert self.json.get('status') == "success"
+        assert self.json.get("status") == "success"
 
     def test_3(self):
-        assert self.json.get('payload') != {}
+        assert self.json.get("payload") != {}
 
     def test_4(self):
-        distgit_name = self.json['payload']['distgit'][0]['distgit_repo_name']
+        distgit_name = self.json["payload"]["distgit"][0]["distgit_repo_name"]
         assert distgit_name is not None
 
     def test_5(self):
-        brew_name = self.json['payload']['distgit'][0]['brew']['brew_package_name']
+        brew_name = self.json["payload"]["distgit"][0]["brew"]["brew_package_name"]
         assert brew_name is not None
 
     def test_6(self):
-        cdn_repo_name = self.json['payload']['distgit'][0]['brew']['cdn'][0]['cdn_repo_name']
+        cdn_repo_name = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["cdn_repo_name"]
         assert cdn_repo_name is not None
 
     def test_7(self):
-        distgit = self.json['payload']['distgit'][0]['brew']['cdn'][0]['delivery']['delivery_repo_name']
+        distgit = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["delivery"]["delivery_repo_name"]
         assert distgit is not None
 
 
@@ -63,25 +62,25 @@ class TestDistgit(unittest.TestCase):
         assert self.response.status_code == 200
 
     def test_2(self):
-        assert self.json.get('status') == "success"
+        assert self.json.get("status") == "success"
 
     def test_3(self):
-        assert self.json.get('payload') != {}
+        assert self.json.get("payload") != {}
 
     def test_4(self):
-        distgit_name = self.json['payload']['distgit'][0]['distgit_repo_name']
+        distgit_name = self.json["payload"]["distgit"][0]["distgit_repo_name"]
         assert distgit_name is not None
 
     def test_5(self):
-        brew_name = self.json['payload']['distgit'][0]['brew']['brew_package_name']
+        brew_name = self.json["payload"]["distgit"][0]["brew"]["brew_package_name"]
         assert brew_name is not None
 
     def test_6(self):
-        cdn_repo_name = self.json['payload']['distgit'][0]['brew']['cdn'][0]['cdn_repo_name']
+        cdn_repo_name = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["cdn_repo_name"]
         assert cdn_repo_name is not None
 
     def test_7(self):
-        distgit = self.json['payload']['distgit'][0]['brew']['cdn'][0]['delivery']['delivery_repo_name']
+        distgit = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["delivery"]["delivery_repo_name"]
         assert distgit is not None
 
 
@@ -102,25 +101,25 @@ class TestBrew(unittest.TestCase):
         assert self.response.status_code == 200
 
     def test_2(self):
-        assert self.json.get('status') == "success"
+        assert self.json.get("status") == "success"
 
     def test_3(self):
-        assert self.json.get('payload') != {}
+        assert self.json.get("payload") != {}
 
     def test_4(self):
-        distgit_name = self.json['payload']['distgit'][0]['distgit_repo_name']
+        distgit_name = self.json["payload"]["distgit"][0]["distgit_repo_name"]
         assert distgit_name is not None
 
     def test_5(self):
-        brew_name = self.json['payload']['distgit'][0]['brew']['brew_package_name']
+        brew_name = self.json["payload"]["distgit"][0]["brew"]["brew_package_name"]
         assert brew_name is not None
 
     def test_6(self):
-        cdn_repo_name = self.json['payload']['distgit'][0]['brew']['cdn'][0]['cdn_repo_name']
+        cdn_repo_name = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["cdn_repo_name"]
         assert cdn_repo_name is not None
 
     def test_7(self):
-        distgit = self.json['payload']['distgit'][0]['brew']['cdn'][0]['delivery']['delivery_repo_name']
+        distgit = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["delivery"]["delivery_repo_name"]
         assert distgit is not None
 
 
@@ -141,25 +140,25 @@ class TestCdn(unittest.TestCase):
         assert self.response.status_code == 200
 
     def test_2(self):
-        assert self.json.get('status') == "success"
+        assert self.json.get("status") == "success"
 
     def test_3(self):
-        assert self.json.get('payload') != {}
+        assert self.json.get("payload") != {}
 
     def test_4(self):
-        distgit_name = self.json['payload']['distgit'][0]['distgit_repo_name']
+        distgit_name = self.json["payload"]["distgit"][0]["distgit_repo_name"]
         assert distgit_name is not None
 
     def test_5(self):
-        brew_name = self.json['payload']['distgit'][0]['brew']['brew_package_name']
+        brew_name = self.json["payload"]["distgit"][0]["brew"]["brew_package_name"]
         assert brew_name is not None
 
     def test_6(self):
-        cdn_repo_name = self.json['payload']['distgit'][0]['brew']['cdn'][0]['cdn_repo_name']
+        cdn_repo_name = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["cdn_repo_name"]
         assert cdn_repo_name is not None
 
     def test_7(self):
-        distgit = self.json['payload']['distgit'][0]['brew']['cdn'][0]['delivery']['delivery_repo_name']
+        distgit = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["delivery"]["delivery_repo_name"]
         assert distgit is not None
 
 
@@ -180,23 +179,23 @@ class TestDelivery(unittest.TestCase):
         assert self.response.status_code == 200
 
     def test_2(self):
-        assert self.json.get('status') == "success"
+        assert self.json.get("status") == "success"
 
     def test_3(self):
-        assert self.json.get('payload') != {}
+        assert self.json.get("payload") != {}
 
     def test_4(self):
-        distgit_name = self.json['payload']['distgit'][0]['distgit_repo_name']
+        distgit_name = self.json["payload"]["distgit"][0]["distgit_repo_name"]
         assert distgit_name is not None
 
     def test_5(self):
-        brew_name = self.json['payload']['distgit'][0]['brew']['brew_package_name']
+        brew_name = self.json["payload"]["distgit"][0]["brew"]["brew_package_name"]
         assert brew_name is not None
 
     def test_6(self):
-        cdn_repo_name = self.json['payload']['distgit'][0]['brew']['cdn'][0]['cdn_repo_name']
+        cdn_repo_name = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["cdn_repo_name"]
         assert cdn_repo_name is not None
 
     def test_7(self):
-        distgit = self.json['payload']['distgit'][0]['brew']['cdn'][0]['delivery']['delivery_repo_name']
+        distgit = self.json["payload"]["distgit"][0]["brew"]["cdn"][0]["delivery"]["delivery_repo_name"]
         assert distgit is not None

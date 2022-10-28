@@ -5,7 +5,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from api.image_pipeline import pipeline_image_names
-from api.pr_in import nightly as nighlty_main
 from api.translate_names import translate_names
 import json
 
@@ -19,10 +18,10 @@ class BuildViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Build.objects.all()
     serializer_class = BuildSerializer
     filter_backends = [DjangoFilterBackend]  # add feature to filter by URL request eg: /v1/builds/?page=2
-    filterset_fields = '__all__'  # so that all columns can be filtered using URL
+    filterset_fields = "__all__"  # so that all columns can be filtered using URL
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 def pipeline_from_github_api_endpoint(request):
     """
     Endpoint to get the image pipeline starting from GitHub, distgit, brew, cdn or delivery
@@ -63,15 +62,15 @@ def pipeline_from_github_api_endpoint(request):
     name = request.query_params.get("name", None)
     version = request.query_params.get("version", None)
 
-    if starting_from == "github":
+    if starting_from.lower().strip() == "github":
         result, status_code = pipeline_image_names.pipeline_from_github(name, version)
-    elif starting_from == "distgit":
+    elif starting_from.lower().strip() == "distgit":
         result, status_code = pipeline_image_names.pipeline_from_distgit(name, version)
-    elif starting_from == "brew":
+    elif starting_from.lower().strip() == "brew":
         result, status_code = pipeline_image_names.pipeline_from_brew(name, version)
-    elif starting_from == "cdn":
+    elif starting_from.lower().strip() == "cdn":
         result, status_code = pipeline_image_names.pipeline_from_cdn(name, version)
-    elif starting_from == "delivery":
+    elif starting_from.lower().strip() == "delivery":
         result, status_code = pipeline_image_names.pipeline_from_delivery(name, version)
     else:
         result, status_code = {
@@ -84,26 +83,7 @@ def pipeline_from_github_api_endpoint(request):
     return Response(jsonstr, status=status_code)
 
 
-@api_view(['GET'])
-def pr_in_nightly(request):
-    arch = request.query_params.get("arch", None)
-    version = request.query_params.get("version", None)
-    repo = request.query_params.get("repo", None)
-    pr = request.query_params.get("pr", None)
-    commit = request.query_params.get("commit", None)
-
-    if arch and version and repo and (pr or commit):
-        result, status_code = nighlty_main.pr_in_nightly(arch, version, repo, pr, commit)
-    else:
-        result, status_code = {
-                                  "status": "error",
-                                  "payload": "Invalid Input"
-                              }, 400
-
-    return Response(result, status=status_code)
-
-
-@api_view(['GET'])
+@api_view(["GET"])
 def translate_names_view(request):
     name_type = request.query_params.get("name_type", None)
     name = request.query_params.get("name", None)
@@ -122,7 +102,7 @@ def translate_names_view(request):
     return Response(result, status=status_code)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 def test(request):
     return Response({
         "status": "success",

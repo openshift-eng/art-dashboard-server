@@ -2,7 +2,8 @@ import requests
 import unittest
 
 # Test deployment at art-build-dev Openshift namespace
-API = "http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1"
+SERVER = "http://localhost:8080"
+API = f"{SERVER}/api/v1"
 
 
 class TestSanityCheck(unittest.TestCase):

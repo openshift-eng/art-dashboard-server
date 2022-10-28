@@ -1,24 +1,27 @@
 # art-dashboard-server
 
-Setup
 
-    podman network create art-dashboard-network
-    podman build -f Dockerfile.base -t art-dash-server:base .
 
 Build
-
-    podman build -f Dockerfile.update -t art-dash-server:latest .
+    
+    # only required once unless RPM reqs change
+    podman build -f Dockerfile.base -t art-dash-server:base --build-arg USERNAME=$USER --build-arg USER_UID=$(id -u) .
+    
+    # repeat this to update the app as it changes
+    podman build -f Dockerfile.update -t art-dash-server:latest --build-arg USERNAME=$USER --build-arg USER_UID=$(id -u) .
 
 Start DB server
 
     podman run --net art-dashboard-network --name mariadb -e MARIADB_ROOT_PASSWORD=secret -e MARIADB_DATABASE=doozer_build -d docker.io/library/mariadb:latest
 
 Run container
+
+    podman network create art-dashboard-network
     
     OPENSHIFT=$HOME/ART-PyCharm-Projects    # CLone doozer, elliot and art-dash to this location.
 
     podman run -it --rm -p 8080:8080 --net art-dashboard-network \
-        -v $(pwd):/workspaces/art-dash \
+        -v "$OPENSHIFT/art-dashboard-server":/workspaces/art-dash:cached,z \
         -v $OPENSHIFT/doozer/:/workspaces/doozer/:cached,z \
         -v $OPENSHIFT/elliott/:/workspaces/elliott/:cached,z \
         -v $HOME/.ssh:/home/$USER/.ssh:ro,cached,z \
@@ -28,7 +31,6 @@ Run container
         -v $HOME/.vimrc:/home/$USER/.vimrc:ro,cached,z \
         -e RUN_ENV=development \
         -e GITHUB_PERSONAL_ACCESS_TOKEN='<your github token>' \
-        -v /tmp/krb5cc_1000:/tmp/krb5cc_1000 \    # Optional. Will have to kinit inside the container, if removing this line.
             art-dash-server:latest
 
 

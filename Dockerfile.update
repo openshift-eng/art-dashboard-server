@@ -28,8 +28,5 @@ RUN cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/do
  && rm -rf /tmp/art-dash
 
 USER "$USER_UID"
-CMD ["python3", "manage.py", "makemigrations"]
-CMD ["python3", "manage.py", "migrate"]
-CMD ["python3", "manage.py", "runserver", "0.0.0.0:8080", "--noreload"]
 
-
+CMD ["sh","-c","python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8080 --noreload"]
