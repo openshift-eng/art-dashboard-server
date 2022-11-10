@@ -19,7 +19,7 @@ RUN umask a+rx && pip3 install --upgrade \
     git+https://github.com/openshift/elliott.git#egg=rh-elliott \
     -r ./requirements.txt
 
-# install art-bot and default configs
+# install default configs
 RUN cp ./container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
  && cp ./container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
  && cp ./conf/krb5-redhat.conf /etc/krb5.conf
