@@ -106,5 +106,5 @@ def translate_names_view(request):
 def test(request):
     return Response({
         "status": "success",
-        "payload": "Setup successful!"
+        "payload": "Setup successful"
     }, status=200)
