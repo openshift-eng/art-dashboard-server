@@ -1,55 +1,53 @@
 import os
 import requests
 import json
-from requests_kerberos import HTTPKerberosAuth, REQUIRED
+from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 from .decorators import update_keytab
 
 
 @update_keytab
 def get_advisory_data(advisory_id):
-
     """
     This method returns advisory data for a given id.
     :param advisory_id: The id of the advisory to get data for.
     :return: Dict, advisory data.
     """
 
-    errata_endpoint = os.environ["ERRATA_ADVISORY_ENDPOINT"]
-    errata_endpoint = errata_endpoint.format(advisory_id)
-
-    kerberos_auth = HTTPKerberosAuth(mutual_authentication=REQUIRED, sanitize_mutual_error_response=False)
-
-    response = requests.get(errata_endpoint, auth=kerberos_auth, verify=False)
-
     try:
+        errata_endpoint = os.environ["ERRATA_ADVISORY_ENDPOINT"]
+        errata_endpoint = errata_endpoint.format(advisory_id)
+
+        kerberos_auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+        response = requests.get(errata_endpoint, auth=kerberos_auth)
         advisory_data = json.loads(response.text)
         response = format_advisory_data(advisory_data)
         return response
     except Exception as e:
+        print(e)
         return None
 
 
 @update_keytab
 def get_user_data(user_id):
-
     """
         This method returns user data for a given id.
         :param user_id: The id of the user to get data for.
         :return: Dict, user data.
         """
 
-    errata_endpoint = os.environ["ERRATA_USER_ENDPOINT"]
-    errata_endpoint = errata_endpoint.format(user_id)
-
-    kerberos_auth = HTTPKerberosAuth(mutual_authentication=REQUIRED, sanitize_mutual_error_response=False)
-
-    response = requests.get(errata_endpoint, auth=kerberos_auth, verify=False)
-
     try:
+        errata_endpoint = os.environ["ERRATA_USER_ENDPOINT"]
+        errata_endpoint = errata_endpoint.format(user_id)
+
+        kerberos_auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+        response = requests.get(errata_endpoint, auth=kerberos_auth)
         user_data = json.loads(response.text)
         response = format_user_data(user_data)
         return response
     except Exception as e:
+        print(e)
         return None
 
 
@@ -58,7 +56,6 @@ def format_user_data(user_data):
 
 
 def format_advisory_data(advisory_data):
-
     """
     This method filters the data for an advisory from errata to pick required content.
     :param advisory_data: The advisory data received from errata.
@@ -202,7 +199,7 @@ def format_advisory_data(advisory_data):
     for key in bug_summary:
         bug_summary_array.append({"bug_status": key,
                                   "count": bug_summary[key],
-                                  "percent": round((bug_summary[key]/total_bugs)*100, 2)})
+                                  "percent": round((bug_summary[key] / total_bugs) * 100, 2)})
 
     final_response["bug_summary"] = bug_summary_array
 
