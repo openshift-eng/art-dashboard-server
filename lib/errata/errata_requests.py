@@ -19,7 +19,7 @@ def get_advisory_data(advisory_id):
 
         kerberos_auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
-        response = requests.get(errata_endpoint, auth=kerberos_auth)
+        response = requests.get(errata_endpoint, auth=kerberos_auth, verify=False)
         advisory_data = json.loads(response.text)
         response = format_advisory_data(advisory_data)
         return response
@@ -42,7 +42,7 @@ def get_user_data(user_id):
 
         kerberos_auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
 
-        response = requests.get(errata_endpoint, auth=kerberos_auth)
+        response = requests.get(errata_endpoint, auth=kerberos_auth, verify=False)
         user_data = json.loads(response.text)
         response = format_user_data(user_data)
         return response
