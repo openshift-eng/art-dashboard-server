@@ -537,8 +537,10 @@ def request_with_kerberos(url: str) -> requests.Response():
     response = requests.get(url, auth=kerberos_auth)
 
     if response.status_code == 401:
+        print(response.json())
         raise exceptions.KerberosAuthenticationError("Kerberos Authentication failed")
     if response.status_code == 403:
+        print(response.json())
         raise exceptions.AccessDenied("Errata Access Denied")
 
     return response
