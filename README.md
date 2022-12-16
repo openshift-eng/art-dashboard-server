@@ -1,6 +1,6 @@
 # art-dashboard-server
 
-
+![run-tox badge](https://github.com/openshift-eng/art-dashboard-server/actions/workflows/run_tox.yml/badge.svg)
 
 Build
     
