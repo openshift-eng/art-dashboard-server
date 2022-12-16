@@ -21,7 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     re_path('build/', include('build.urls'), name='build'),
     re_path('release/', include('ocp_build_data.urls'), name="release"),
-    #url('health/', include('build_health.urls'), name='build_health'),
     re_path('autocomplete/', include('autocomplete.urls'), name='autocomplete'),
     re_path('errata/', include('errata.urls'), name='errata'),
     re_path('incident/', include('incident_reports.urls'), name='incident'),

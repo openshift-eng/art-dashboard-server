@@ -168,7 +168,7 @@ def get_ga_version():
     for data in response.json()['tree']:
         path: str = data['path']
 
-        regex = f"channels/fast-(?P<version>\d+.\d+).yaml"
+        regex = r"channels/fast-(?P<version>\d+.\d+).yaml"
 
         if path.startswith("channels/fast"):
             m = re.match(regex, path)

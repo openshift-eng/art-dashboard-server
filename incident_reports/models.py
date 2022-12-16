@@ -3,6 +3,7 @@ import datetime
 from django.core import serializers
 import json
 
+
 # Create your models here.
 
 
@@ -30,12 +31,11 @@ class IncidentManager(models.Manager):
         try:
             self.filter(log_incident_id=incident_id).delete()
             return 0
-        except Exception as e:
+        except Exception:
             return 1
 
 
 class Incident(models.Model):
-
     class Meta:
         db_table = "log_incident"
 

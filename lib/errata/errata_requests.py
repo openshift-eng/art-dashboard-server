@@ -25,7 +25,7 @@ def get_advisory_data(advisory_id):
         advisory_data = json.loads(response.text)
         response = format_advisory_data(advisory_data)
         return response
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -49,7 +49,7 @@ def get_user_data(user_id):
         user_data = json.loads(response.text)
         response = format_user_data(user_data)
         return response
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -202,7 +202,7 @@ def format_advisory_data(advisory_data):
     for key in bug_summary:
         bug_summary_array.append({"bug_status": key,
                                   "count": bug_summary[key],
-                                  "percent": round((bug_summary[key]/total_bugs)*100, 2)})
+                                  "percent": round((bug_summary[key] / total_bugs) * 100, 2)})
 
     final_response["bug_summary"] = bug_summary_array
 

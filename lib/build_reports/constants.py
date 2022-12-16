@@ -38,5 +38,3 @@ BUILD_TABLE_COLUMN = {
     "time.iso": "iso_time",
     "time.unix": "unix_time"
 }
-
-

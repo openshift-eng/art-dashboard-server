@@ -116,6 +116,7 @@ class KerberosAuthenticationError(InternalServicesExceptions):
     """Exception raised for Authentication error if keytab or ticket is missing
     """
 
+
 class AccessDenied(InternalServicesExceptions):
     """Exception raised for Authentication errors
     """

@@ -38,12 +38,12 @@ def get_all_ocp_build_data_branches():
             branches_data = sorted(branches_data, key=lambda k: (int(float(k["version"])),
                                                                  int(k["version"].split(".")[1])),
                                    reverse=True)
-        except Exception as e:
+        except Exception:
             print("Something wrong with openshift versions on ocp-build-data branch names.")
 
         return branches_data
 
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
         return []
 
@@ -85,7 +85,7 @@ def get_advisories(branch_name):
             try:
                 advisories = yml_data[version]['assembly']['group']['advisories']
                 brew_event = yml_data[version]['assembly']['basis']['brew_event']
-            except:
+            except Exception:
                 continue
 
             if -1 in advisories.values() or 1 in advisories.values():
