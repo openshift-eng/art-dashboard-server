@@ -56,10 +56,6 @@ Response:
                                 "delivery_repo_url": ""}}]}}]}}
 ```
 
-### GET /api/v1/translate-names
-
-Endpoint to translate names 
-
 ### GET /api/v1/test
 
 Test endpoint to check if server is deployed correctly, both local and in production.

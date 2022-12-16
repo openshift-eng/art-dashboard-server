@@ -3,6 +3,8 @@ from typing import Union, Tuple, List
 
 import cachetools
 import datetime
+import re
+import requests
 from fcntl import fcntl, F_GETFL, F_SETFL
 import koji
 import logging
@@ -13,95 +15,9 @@ from threading import RLock
 import time
 from api.kerberos import do_kinit
 import functools
+import traceback
 
 logger = logging.getLogger()
-
-
-def please_notify_art_team_of_error(so, payload):
-    dt = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-    so.snippet(payload=payload,
-               intro='Sorry, I encountered an error. Please contact @art-team with the following details.',
-               filename=f'error-details-{dt}.txt')
-
-
-def paginator(paged_function, member_name):
-    """
-    Lists are paginated, so here's a generator to page through all of them if needed.
-    paged_function: a function that takes a cursor parameter and returns a paginated response object
-    member_name: the member of the response object that has the paginated payload
-
-    Example usage:
-        for channel in paginator(lambda cursor: web_client.users_conversations(cursor=cursor), "channels"):
-            # do stuff with channel
-    """
-    cursor = ""
-    while True:
-        response = paged_function(cursor)
-        for ch in response[member_name]:
-            yield ch
-        cursor = response["response_metadata"].get("next_cursor")
-        if not cursor:
-            break
-
-
-def lookup_channel(web_client, name, only_private=False, only_public=False):
-    """
-    Look up a channel by name.
-    Only searches channels to which the bot has been added.
-    Returns None or a channel record e.g. {'id': 'CB95J6R4N', 'name': 'aos-art', 'is_private': False, ...}
-    """
-    if only_private and only_public:
-        raise Exception("channels cannot be both private and public")
-
-    if only_private:
-        types = "private_channel"
-    elif only_public:
-        types = "public_channel" if only_public else types
-    else:
-        types = "public_channel, private_channel"
-
-    channel = None
-    for ch in paginator(lambda c: web_client.users_conversations(types=types, cursor=c), "channels"):
-        if ch["name"] == name:
-            channel = ch
-            break
-
-    return channel
-
-
-async def cmd_gather_async(cmd: Union[List[str], str], check: bool = True, **kwargs) -> Tuple[int, str, str]:
-    """ Runs a command asynchronously and returns rc,stdout,stderr as a tuple
-    :param cmd: A shell command
-    :param check: If check is True and the exit code was non-zero, it raises a ChildProcessError
-    :param kwargs: Other arguments passing to asyncio.subprocess.create_subprocess_exec
-    :return: rc,stdout,stderr
-    """
-
-    print(f'Running async command: {cmd}')
-
-    if isinstance(cmd, str):
-        cmd_list = shlex.split(cmd)
-    else:
-        cmd_list = cmd
-
-    # capture stdout and stderr if they are not set in kwargs
-    if "stdout" not in kwargs:
-        kwargs["stdout"] = asyncio.subprocess.PIPE
-    if "stderr" not in kwargs:
-        kwargs["stderr"] = asyncio.subprocess.PIPE
-
-    # Execute command asynchronously
-    proc = await asyncio.subprocess.create_subprocess_exec(cmd_list[0], *cmd_list[1:], **kwargs)
-    stdout, stderr = await proc.communicate()
-    stdout = stdout.decode() if stdout else ""
-    stderr = stderr.decode() if stderr else ""
-    if proc.returncode != 0:
-        msg = f"Process {cmd_list!r} exited with code {proc.returncode}.\nstdout>>{stdout}<<\nstderr>>{stderr}<<\n"
-        if check:
-            raise ChildProcessError(msg)
-        else:
-            logger.warning(msg)
-    return proc.returncode, stdout, stderr
 
 
 def cmd_gather(cmd, set_env=None, cwd=None, realtime=False):
@@ -158,16 +74,16 @@ def cmd_gather(cmd, set_env=None, cwd=None, realtime=False):
         # setup non-blocking read
         # set the O_NONBLOCK flag of proc.stdout file descriptor:
         flags = fcntl(proc.stdout, F_GETFL)  # get current proc.stdout flags
-        fcntl(proc.stdout, F_SETFL, flags | O_NONBLOCK)
+        fcntl(proc.stdout, F_SETFL, flags | os.O_NONBLOCK)
         # set the O_NONBLOCK flag of proc.stderr file descriptor:
         flags = fcntl(proc.stderr, F_GETFL)  # get current proc.stderr flags
-        fcntl(proc.stderr, F_SETFL, flags | O_NONBLOCK)
+        fcntl(proc.stderr, F_SETFL, flags | os.O_NONBLOCK)
 
         rc = None
         while rc is None:
             output = None
             try:
-                output = read(proc.stdout.fileno(), 256)
+                output = os.read(proc.stdout.fileno(), 256)
                 logger.info(f'{cmd_info} stdout: {out.rstrip()}')
                 out += output
             except OSError:
@@ -175,7 +91,7 @@ def cmd_gather(cmd, set_env=None, cwd=None, realtime=False):
 
             error = None
             try:
-                error = read(proc.stderr.fileno(), 256)
+                error = os.read(proc.stderr.fileno(), 256)
                 logger.warning(f'{cmd_info} stderr: {error.rstrip()}')
                 out += error
             except OSError:
@@ -193,39 +109,6 @@ def cmd_gather(cmd, set_env=None, cwd=None, realtime=False):
     return rc, out, err
 
 
-def cmd_assert(so, cmd, set_env=None, cwd=None, realtime=False):
-    """
-    A cmd_gather invocation, but if it fails, it will notify the
-    alert the monitoring channel and the requesting user with
-    information about the failure.
-    :return:
-    """
-
-    error_id = f'{so.from_user_id()}.{int(time.time()*1000)}'
-
-    def send_cmd_error(rc, stdout, stderr):
-        intro = f'Error running command (for user={so.from_user_mention()} error-id={error_id}): {cmd}'
-        payload = f"rc={rc}\n\nstdout={stdout}\n\nstderr={stderr}\n"
-        so.monitoring_snippet(intro=intro, filename='cmd_error.log', payload=payload)
-
-    try:
-        rc, stdout, stderr = cmd_gather(cmd, set_env, cwd, realtime)
-    except subprocess.CalledProcessError as exec:
-        send_cmd_error(exec.returncode, exec.stdout, exec.stderr)
-        raise
-    except:
-        send_cmd_error(-1000, '', traceback.format_exc())
-        raise
-
-    if rc:
-        logger.warning(f'error-id={error_id} . Non-zero return code from: {cmd}\nStdout:\n{stdout}\n\nStderr:\n{stderr}\n')
-        send_cmd_error(rc, stdout, stderr)
-        so.say(f'Sorry, but I encountered an error. Details have been sent to the ART team. Mention error-id={error_id} when requesting support.')
-        raise IOError(f'Non-zero return code from: {cmd}')
-
-    return rc, stdout, stderr
-
-
 def koji_client_session():
     koji_api = koji.ClientSession('https://brewhub.engineering.redhat.com/brewhub')
     koji_api.hello()  # test for connectivity
@@ -234,19 +117,28 @@ def koji_client_session():
 
 LOCK = RLock()
 CACHE = cachetools.LRUCache(maxsize=2000)
+
+
 def cached(func):
     """decorator to memoize functions"""
+
     @cachetools.cached(CACHE, lock=LOCK)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
+
     return wrapper
 
+
 CACHE_TTL = cachetools.TTLCache(maxsize=100, ttl=3600)  # expire after an hour
+
+
 def cached_ttl(func):
     """decorator to memoize functions"""
+
     @cachetools.cached(CACHE_TTL, lock=LOCK)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -256,4 +148,33 @@ def refresh_krb_auth(func):
         do_kinit()
         func_ret = func(*args, **kwargs)
         return func_ret
+
     return wrapper
+
+
+def get_ga_version():
+    """
+    Get the latest GA version from https://github.com/openshift/cincinnati-graph-data/tree/master/channels
+    The highest version in the fast channel is considered GA.
+    """
+    headers = {"Authorization": f"token {os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']}"}
+    response = requests.get(
+        "https://api.github.com/repos/openshift/cincinnati-graph-data/git/trees/master?recursive=1",
+        headers=headers
+    )
+
+    versions = []
+
+    for data in response.json()['tree']:
+        path: str = data['path']
+
+        regex = f"channels/fast-(?P<version>\d+.\d+).yaml"
+
+        if path.startswith("channels/fast"):
+            m = re.match(regex, path)
+            if m:
+                version: str = m.groupdict()['version']
+                versions.append(tuple(map(int, version.split("."))))
+    ga_version = sorted(versions, key=lambda x: (-x[0], -x[1]))[0]
+
+    return f"{ga_version[0]}.{ga_version[1]}"

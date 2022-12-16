@@ -5,8 +5,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from api.image_pipeline import pipeline_image_names
-from api.translate_names import translate_names
+from api.util import get_ga_version
 import json
+import re
 
 
 class BuildViewSet(viewsets.ReadOnlyModelViewSet):
@@ -62,44 +63,36 @@ def pipeline_from_github_api_endpoint(request):
     name = request.query_params.get("name", None)
     version = request.query_params.get("version", None)
 
-    if starting_from.lower().strip() == "github":
-        result, status_code = pipeline_image_names.pipeline_from_github(name, version)
-    elif starting_from.lower().strip() == "distgit":
-        result, status_code = pipeline_image_names.pipeline_from_distgit(name, version)
-    elif starting_from.lower().strip() == "brew":
-        result, status_code = pipeline_image_names.pipeline_from_brew(name, version)
-    elif starting_from.lower().strip() == "cdn":
-        result, status_code = pipeline_image_names.pipeline_from_cdn(name, version)
-    elif starting_from.lower().strip() == "delivery":
-        result, status_code = pipeline_image_names.pipeline_from_delivery(name, version)
+    # validate input
+    if re.match(r"^[a-z]+$", starting_from) and re.match(r"^[a-z0-9/\-]+$", name) and re.match(r"^\d+.\d+$", version):
+        if not version:
+            version = get_ga_version()  # Default version set to GA version, if unspecified
+
+        if starting_from.lower().strip() == "github":
+            result, status_code = pipeline_image_names.pipeline_from_github(name, version)
+        elif starting_from.lower().strip() == "distgit":
+            result, status_code = pipeline_image_names.pipeline_from_distgit(name, version)
+        elif starting_from.lower().strip() == "brew":
+            result, status_code = pipeline_image_names.pipeline_from_brew(name, version)
+        elif starting_from.lower().strip() == "cdn":
+            result, status_code = pipeline_image_names.pipeline_from_cdn(name, version)
+        elif starting_from.lower().strip() == "delivery":
+            result, status_code = pipeline_image_names.pipeline_from_delivery(name, version)
+        else:
+            result, status_code = {
+                                      "status": "error",
+                                      "payload": "Invalid value in field 'starting_from'"
+                                  }, 400
+
     else:
         result, status_code = {
                                   "status": "error",
-                                  "payload": "Invalid value in field 'starting_from'"
+                                  "payload": "Invalid input values"
                               }, 400
 
-    jsonstr = json.loads(json.dumps(result, default=lambda o: o.__dict__))
+    json_string = json.loads(json.dumps(result, default=lambda o: o.__dict__))
 
-    return Response(jsonstr, status=status_code)
-
-
-@api_view(["GET"])
-def translate_names_view(request):
-    name_type = request.query_params.get("name_type", None)
-    name = request.query_params.get("name", None)
-    name_type2 = request.query_params.get("name_type2", None)
-    major = request.query_params.get("major", None)
-    minor = request.query_params.get("minor", None)
-
-    if name_type and name and name_type2:
-        result, status_code = translate_names.translate_names_main(name_type, name, name_type2, major, minor)
-    else:
-        result, status_code = {
-                                  "status": "error",
-                                  "payload": "Invalid Input"
-                              }, 400
-
-    return Response(result, status=status_code)
+    return Response(json_string, status=status_code)
 
 
 @api_view(["GET"])

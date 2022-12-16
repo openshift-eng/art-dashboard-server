@@ -126,9 +126,9 @@ def distgit_to_delivery(distgit_repo_name: str, version: str, variant: str) -> B
 # Brew stuff
 def brew_is_available(brew_name: str) -> bool:
     """
-    Function to check whether the given brew repo is valid
+    Function to check whether the given brew package is valid
 
-    :brew_name: The name of the brew repo.
+    :brew_name: The name of the brew package.
     """
     try:
         _ = get_brew_id(brew_name)
@@ -257,13 +257,13 @@ def brew_to_delivery(brew_package_name: str, variant: str, brew_object) -> None:
 
 # @util.cached
 def doozer_brew_distgit(version: str) -> list:
-    output = util.cmd_gather(
+    _, output, stderr = util.cmd_gather(
         f"doozer --disable-gssapi -g openshift-{version} images:print --short '{{component}}: {{name}}'")
-    if "koji.GSSAPIAuthError" in output[2]:
+    if "koji.GSSAPIAuthError" in stderr:
         raise exceptions.KerberosAuthenticationError("Kerberos authentication failed for doozer")
 
     result = []
-    for line in output[1].splitlines():
+    for line in output.splitlines():
         array = line.split(": ")
         result.append(array)
 
@@ -278,7 +278,6 @@ def brew_to_distgit(brew_name: str, version: str) -> str:
     :version: OCP version. Eg: 4.10
     """
     output = doozer_brew_distgit(version)
-
     dict_data = {}
     for line in output:
         if len(line) == 2:
@@ -520,7 +519,7 @@ def get_delivery_repo_id(name: str) -> str:
     response = request_with_kerberos(url)
 
     if response.status_code == 404:
-        raise exceptions.DeliveryRepoUrlNotFound(f"Couldn't find delivery repo link on Pyxis")
+        raise exceptions.DeliveryRepoUrlNotFound("Couldn't find delivery repo link on Pyxis")
 
     try:
         repo_id = response.json()['data'][0]['_id']
