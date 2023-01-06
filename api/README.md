@@ -56,6 +56,21 @@ Response:
                                 "delivery_repo_url": ""}}]}}]}}
 ```
 
+### GET /api/v1/ga-version
+
+Get the Openshift GA version
+
+Request: Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1/ga-version``
+
+Response:
+
+```json
+{
+    "status": "success",
+    "payload": "4.11"
+}
+```
+
 ### GET /api/v1/test
 
 Test endpoint to check if server is deployed correctly, both local and in production.
