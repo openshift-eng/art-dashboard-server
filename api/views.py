@@ -8,6 +8,7 @@ from api.image_pipeline import pipeline_image_names
 from api.util import get_ga_version
 import json
 import re
+from . import request_dispatcher
 
 
 class BuildViewSet(viewsets.ReadOnlyModelViewSet):
@@ -119,7 +120,19 @@ def ga_version(request):
 
 
 @api_view(["GET"])
-def test(request):
+def branch_data(request):
+    request_type = request.query_params.get("type", None)
+
+    if request_type is None:
+        return Response(data={"status": "error", "message": "Missing \"type\" params in the url."})
+    elif request_type in ["advisory", "all", "openshift_branch_advisory_ids"]:
+        data = request_dispatcher.handle_get_request_for_branch_data_view(request)
+        response = Response(data=data)
+        return response
+
+
+@api_view(["GET"])
+def test():
     return Response({
         "status": "success",
         "payload": "Setup successful!"

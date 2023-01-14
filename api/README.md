@@ -4,6 +4,7 @@ Dev Base URL: ```http://localhost:8080``` <br>
 For Prod URL check `ART_DASH_SERVER_ROUTE` in production build configs.
 
 ### GET /api/v1/builds
+
 Prints all the build details. Results are paginated, per page 100 results. <br><br>
 
 Can filter with individual fields by specifying their name. Eg: ```/api/v1/builds/?build_0_package_id=79812```
@@ -14,11 +15,13 @@ Endpoint to get the image pipeline of an image, starting from github, distgit, b
 
 Request payload:
 
-starting_from: The starting point of the pipeline. Possible values: `github` | `distgit` | `brew` | `cdn` | `delivery` <br>
-name: Name of the package eg: `hypershift` for github, `ose-hypershift-container` for brew, `openshift4/ose-hypershift-rhel8` for delivery<br>
+starting_from: The starting point of the pipeline. Possible values: `github` | `distgit` | `brew` | `cdn`
+| `delivery` <br>
+name: Name of the package eg: `hypershift` for github, `ose-hypershift-container` for
+brew, `openshift4/ose-hypershift-rhel8` for delivery<br>
 version: Openshift version. Eg: `4.10`
 
-eg: 
+eg:
 
 Request: `localhost:8080/api/v1/pipeline-image?starting_from=github&name=hypershift&version=4.10`
 
@@ -60,14 +63,88 @@ Response:
 
 Get the Openshift GA version
 
-Request: Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1/ga-version``
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1/ga-version``
 
 Response:
 
 ```json
 {
-    "status": "success",
-    "payload": "4.11"
+  "status": "success",
+  "payload": "4.11"
+}
+```
+
+### GET /api/v1/branch
+
+This endpoint can be used for the following 3 purposes:
+
+- Get all the branches from OCP build data GitHub repo using the query param ``type=all``
+
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com//release/branch/?type=all``
+
+Response:
+
+```json
+[
+  {
+    "name": "openshift-4.13",
+    "version": "4.13",
+    "priority": 0,
+    "extra_details": {
+      "name": "openshift-4.13",
+      "commit": {
+        "sha": "cd1d757c2327921049eddc51705e9579e0a76278",
+        "url": "https://api.github.com/repos/openshift/ocp-build-data/commits/cd1d757c2327921049eddc51705e9579e0a76278"
+      },
+      "protected": true
+    }
+  }
+]
+```
+
+- Get the current and previous advisories for a particular branch with the
+  params ``type=openshift_branch_advisory_ids&branch=openshift-4.11``
+
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com//release/branch/?type=openshift_branch_advisory_ids&branch=openshift-4.11``
+
+Response:
+
+```json
+{
+  "current": {
+    "extras": 100,
+    "image": 101,
+    "metadata": 102,
+    "rpm": 103
+  },
+  "previous": {
+    "extras": 99,
+    "image": 98,
+    "metadata": 97,
+    "rpm": 96
+  }
+}
+```
+
+- Get the advisory details of a particular advisory using the params ``type=advisory&id=100``
+
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com//errata/advisory/?type=advisory&id=100``
+
+Response:
+
+```json
+{
+  "status": "success",
+  "message": "Data is ready.",
+  "data": {
+    "advisory_details": [
+      {
+        ...
+      }
+    ],
+    "bugs": [],
+    "bug_summary": []
+  }
 }
 ```
 
@@ -78,9 +155,10 @@ Test endpoint to check if server is deployed correctly, both local and in produc
 Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1/test``
 
 Response:
+
 ```json
 {
-    "status": "success",
-    "payload": "Setup successful"
+  "status": "success",
+  "payload": "Setup successful"
 }
 ```
