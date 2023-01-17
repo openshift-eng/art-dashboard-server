@@ -132,7 +132,7 @@ def branch_data(request):
 
 
 @api_view(["GET"])
-def test():
+def test(request):
     return Response({
         "status": "success",
         "payload": "Setup successful!"
