@@ -44,7 +44,7 @@ class IncidentView(generics.ListAPIView, generics.CreateAPIView, generics.Update
             delete_status = serializer.delete()
 
             if delete_status == 0:
-                return Response( data= {
+                return Response(data={
                     "status": 0,
                     "message": "Incident deleted successfully.",
                     "data": serializer.validated_data

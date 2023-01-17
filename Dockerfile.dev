@@ -17,7 +17,7 @@ USER 0
 RUN umask a+rx && pip3 install --upgrade \
     git+https://github.com/openshift/doozer.git#egg=rh-doozer \
     git+https://github.com/openshift/elliott.git#egg=rh-elliott \
-    -r ./requirements.txt
+    -r ./requirements.txt -r ./requirements-dev.txt
 
 # install default configs
 RUN cp ./container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
@@ -25,5 +25,3 @@ RUN cp ./container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/setting
  && cp ./conf/krb5-redhat.conf /etc/krb5.conf
 
 USER "$USER_UID"
-
-CMD ["sh","-c","python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8080 --noreload"]

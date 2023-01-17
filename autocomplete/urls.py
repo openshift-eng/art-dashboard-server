@@ -1,6 +1,6 @@
-from django.conf.urls import url
+from django.urls import re_path
 from .views import AutoComplete
 
 urlpatterns = [
-    url('', AutoComplete.as_view(), name='auto_complete_base'),
+    re_path('', AutoComplete.as_view(), name='auto_complete_base'),
 ]

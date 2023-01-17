@@ -1,6 +1,6 @@
-from django.conf.urls import url
+from django.urls import re_path
 from .views import IncidentView
 
 urlpatterns = [
-    url('', IncidentView.as_view(), name='incident_report_url'),
+    re_path('', IncidentView.as_view(), name='incident_report_url'),
 ]

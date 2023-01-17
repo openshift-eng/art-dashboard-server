@@ -15,15 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from django.conf.urls import url, include
+from django.urls import re_path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url('build/', include('build.urls'), name='build'),
-    url('release/', include('ocp_build_data.urls'), name="release"),
-    #url('health/', include('build_health.urls'), name='build_health'),
-    url('autocomplete/', include('autocomplete.urls'), name='autocomplete'),
-    url('errata/', include('errata.urls'), name='errata'),
-    url('incident/', include('incident_reports.urls'), name='incident'),
-    url('api/v1/', include('api.urls')),
+    re_path('build/', include('build.urls'), name='build'),
+    re_path('release/', include('ocp_build_data.urls'), name="release"),
+    re_path('autocomplete/', include('autocomplete.urls'), name='autocomplete'),
+    re_path('errata/', include('errata.urls'), name='errata'),
+    re_path('incident/', include('incident_reports.urls'), name='incident'),
+    re_path('api/v1/', include('api.urls')),
 ]

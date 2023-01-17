@@ -1,77 +1,164 @@
 # ART-API
 
-Prod Base URL: ```http://art-dash-server-aos-art-web.apps.ocp4.prod.psi.redhat.com```<br>
-Dev Base URL: ```http://localhost:8080```
+Dev Base URL: ```http://localhost:8080``` <br>
+For Prod URL check `ART_DASH_SERVER_ROUTE` in production build configs.
 
 ### GET /api/v1/builds
+
 Prints all the build details. Results are paginated, per page 100 results. <br><br>
-Eg:
-```
+
+Can filter with individual fields by specifying their name. Eg: ```/api/v1/builds/?build_0_package_id=79812```
+
+### GET /api/v1/pipeline-image
+
+Endpoint to get the image pipeline of an image, starting from github, distgit, brew, cdn or delivery repo name.
+
+Request payload:
+
+starting_from: The starting point of the pipeline. Possible values: `github` | `distgit` | `brew` | `cdn`
+| `delivery` <br>
+name: Name of the package eg: `hypershift` for github, `ose-hypershift-container` for
+brew, `openshift4/ose-hypershift-rhel8` for delivery<br>
+version: Openshift version. Eg: `4.10`
+
+eg:
+
+Request: `localhost:8080/api/v1/pipeline-image?starting_from=github&name=hypershift&version=4.10`
+
+Response:
+
+```json
 {
-    "count": 90322,
-    "next": "http://localhost:8080/api/v1/builds/?page=2",
-    "previous": null,
-    "results": [
-        {
-            "url": "http://localhost:8080/api/v1/builds/1/",
-            "env_OS_GIT_MAJOR": 4,
-            "build_0_package_id": null,
-            "time_unix": 1629484778550,
-            "runtime_user": "ocp-build",
-            "build_time_unix": 1629484778549,
-            "env_OS_GIT_TREE_STATE": "clean",
-            "incomplete": "True",
-            "build_0_id": null,
-            "build_0_version": null,
-            "label_release": "202108201835.p0.git.0cdf732",
-            "brew_task_state": "failure",
-            "label_io_openshift_build_commit_id": "0cdf732a2cbc425fd74bb7e8793f0d55bba71a39",
-            "env_OS_GIT_MINOR": 5,
-            "group": "openshift-4.5",
-            "dg_commit": "9f0f5eae",
-            "brew_image_shas": null,
-            "label_io_openshift_build_source_location": "https://github.com/openshift/ironic-inspector-image",
-            "build_0_release": null,
-            "dg_name": "ironic-inspector",
-            "env_OS_GIT_VERSION": "4.5.0-202108201835.p0.git.0cdf732-0cdf732",
-            "build_0_source": null,
-            "time_iso": "2021-08-20T18:39:38Z",
-            "runtime_uuid": 20210820.183632,
-            "label_io_openshift_maintainer_subcomponent": "ironic",
-            "label_io_openshift_build_commit_url": "https://github.com/openshift/ironic-inspector-image/commit/0cdf732a2cbc425fd74bb7e8793f0d55bba71a39",
-            "build_0_name": null,
-            "label_io_openshift_maintainer_component": "Bare Metal Hardware Provisioning",
-            "build_time_iso": "2021-08-20T18:39:38Z",
-            "brew_task_id": 39151665,
-            "label_version": "v4.5.0",
-            "label_io_openshift_maintainer_product": "OpenShift Container Platform",
-            "env_OS_GIT_PATCH": 0,
-            "jenkins_job_url": "https://saml.buildvm.openshift.eng.bos.redhat.com:8888/job/hack/job/lmeyer/job/lmeyer-dev/job/dev-build%252Fcustom/",
-            "env_OS_GIT_COMMIT": "0cdf732",
-            "jenkins_job_name": "hack/lmeyer/lmeyer-dev/dev-build%2Fcustom",
-            "label_com_redhat_component": "ironic-inspector-container",
-            "dg_qualified_name": "containers/ironic-inspector",
-            "label_name": "openshift/ose-ironic-inspector",
-            "jenkins_node_name": "master",
-            "dg_qualified_key": "containers/ironic-inspector",
-            "jenkins_build_url": "https://saml.buildvm.openshift.eng.bos.redhat.com:8888/job/hack/job/lmeyer/job/lmeyer-dev/job/dev-build%252Fcustom/55/",
-            "dg_namespace": "containers",
-            "brew_faultCode": null,
-            "jenkins_build_number": 55,
-            "build_0_nvr": null,
-            "brew_build_ids": null,
-            "label_io_openshift_tags": null,
-            "env_KUBE_GIT_TREE_STATE": null,
-            "env_KUBE_GIT_MAJOR": null,
-            "env_KUBE_GIT_VERSION": null,
-            "env_KUBE_GIT_MINOR": null,
-            "env_KUBE_GIT_COMMIT": null,
-            "label_io_openshift_release_operator": null,
-            "label_io_openshift_expose_services": null,
-            "label_io_openshift_s2i_scripts_url": null,
-            "label_io_openshift_build_versions": null
-        }
-    ]
+    "status": "success",
+    "payload": {
+        "openshift_version": "",
+        "github_repo": "",
+        "upstream_github_url": "",
+        "private_github_url": "",
+        "distgit": [
+            {
+                "distgit_repo_name": "",
+                "distgit_url": "",
+                "brew": {
+                    "brew_id": ,
+                    "brew_build_url": "",
+                    "brew_package_name": "",
+                    "bundle_component": "",
+                    "bundle_distgit": "",
+                    "payload_tag": "",
+                    "cdn": [
+                        {
+                            "cdn_repo_id": ,
+                            "cdn_repo_name": "",
+                            "cdn_repo_url": "",
+                            "variant_name": "",
+                            "variant_id": ,
+                            "delivery": {
+                                "delivery_repo_id": "",
+                                "delivery_repo_name": "",
+                                "delivery_repo_url": ""}}]}}]}}
+```
+
+### GET /api/v1/ga-version
+
+Get the Openshift GA version
+
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1/ga-version``
+
+Response:
+
+```json
+{
+  "status": "success",
+  "payload": "4.11"
 }
 ```
-Can filter with individual fields by specifying their name. Eg: ```/api/v1/builds/?build_0_package_id=79812```
+
+### GET /api/v1/branch
+
+This endpoint can be used for the following 3 purposes:
+
+- Get all the branches from OCP build data GitHub repo using the query param ``type=all``
+
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com//release/branch/?type=all``
+
+Response:
+
+```json
+[
+  {
+    "name": "openshift-4.13",
+    "version": "4.13",
+    "priority": 0,
+    "extra_details": {
+      "name": "openshift-4.13",
+      "commit": {
+        "sha": "cd1d757c2327921049eddc51705e9579e0a76278",
+        "url": "https://api.github.com/repos/openshift/ocp-build-data/commits/cd1d757c2327921049eddc51705e9579e0a76278"
+      },
+      "protected": true
+    }
+  }
+]
+```
+
+- Get the current and previous advisories for a particular branch with the
+  params ``type=openshift_branch_advisory_ids&branch=openshift-4.11``
+
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com//release/branch/?type=openshift_branch_advisory_ids&branch=openshift-4.11``
+
+Response:
+
+```json
+{
+  "current": {
+    "extras": 100,
+    "image": 101,
+    "metadata": 102,
+    "rpm": 103
+  },
+  "previous": {
+    "extras": 99,
+    "image": 98,
+    "metadata": 97,
+    "rpm": 96
+  }
+}
+```
+
+- Get the advisory details of a particular advisory using the params ``type=advisory&id=100``
+
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com//errata/advisory/?type=advisory&id=100``
+
+Response:
+
+```json
+{
+  "status": "success",
+  "message": "Data is ready.",
+  "data": {
+    "advisory_details": [
+      {
+        ...
+      }
+    ],
+    "bugs": [],
+    "bug_summary": []
+  }
+}
+```
+
+### GET /api/v1/test
+
+Test endpoint to check if server is deployed correctly, both local and in production.
+
+Request: ``http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1/test``
+
+Response:
+
+```json
+{
+  "status": "success",
+  "payload": "Setup successful"
+}
+```

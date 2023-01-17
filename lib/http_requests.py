@@ -22,6 +22,13 @@ def get_all_ocp_build_data_branches():
     try:
         req = requests.get(app_constants.GITHUB_URL_TO_LIST_ALL_OCP_BUILD_DATA_BRANCHES, headers=HEADERS)
         branches = req.json()
+
+        # Check if multiple pages are present. By default, GitHub API limits to 30 results per page. ocp-build data has
+        # a lot of branches.
+        # https://docs.github.com/en/rest/branches/branches#list-branches
+        while 'next' in req.links.keys():
+            req = requests.get(req.links['next']['url'], headers=HEADERS)
+            branches.extend(req.json())
         branches_data = []
 
         for branch in branches:
@@ -38,12 +45,12 @@ def get_all_ocp_build_data_branches():
             branches_data = sorted(branches_data, key=lambda k: (int(float(k["version"])),
                                                                  int(k["version"].split(".")[1])),
                                    reverse=True)
-        except Exception as e:
+        except Exception:
             print("Something wrong with openshift versions on ocp-build-data branch names.")
 
         return branches_data
 
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
         return []
 
