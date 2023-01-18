@@ -1,5 +1,4 @@
 from build.models import Build
-from rest_framework import viewsets
 from .serializer import BuildSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view
