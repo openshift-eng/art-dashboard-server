@@ -1,5 +1,4 @@
 from build.models import Build
-from rest_framework import viewsets
 from .serializer import BuildSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view
@@ -9,6 +8,7 @@ from api.util import get_ga_version
 import json
 import re
 from . import request_dispatcher
+from rest_framework import viewsets, filters
 
 
 class BuildViewSet(viewsets.ReadOnlyModelViewSet):
@@ -19,8 +19,14 @@ class BuildViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Build.objects.all()
     serializer_class = BuildSerializer
-    filter_backends = [DjangoFilterBackend]  # add feature to filter by URL request eg: /v1/builds/?page=2
+    filter_backends = [DjangoFilterBackend,
+                       filters.OrderingFilter]  # add feature to filter by URL request eg: /v1/builds/?page=2
     filterset_fields = "__all__"  # so that all columns can be filtered using URL
+    # Explicitly specify which fields the API may be ordered against
+    ordering_fields = ()
+
+    # This will be used as the default ordering
+    ordering = ("-build_time_iso")
 
 
 @api_view(["GET"])
