@@ -9,6 +9,22 @@ import json
 import re
 from . import request_dispatcher
 from rest_framework import viewsets, filters
+import django_filters
+
+
+class UserFilter(django_filters.FilterSet):
+    class Meta:
+        model = Build
+        fields = {
+            "build_0_id": ["icontains"],
+            "dg_name": ["icontains"],
+            "brew_task_state": ["icontains"],
+            "brew_task_id": ["icontains"],
+            "group": ["icontains"],
+            "dg_commit": ["icontains"],
+            "label_io_openshift_build_commit_id": ["icontains"],
+            "time_iso": ["exact"],
+        }
 
 
 class BuildViewSet(viewsets.ReadOnlyModelViewSet):
@@ -21,9 +37,9 @@ class BuildViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BuildSerializer
     filter_backends = [DjangoFilterBackend,
                        filters.OrderingFilter]  # add feature to filter by URL request eg: /v1/builds/?page=2
-    filterset_fields = "__all__"  # so that all columns can be filtered using URL
     # Explicitly specify which fields the API may be ordered against
-    ordering_fields = ()
+    # ordering_fields = ()
+    filterset_class = UserFilter
 
     # This will be used as the default ordering
     ordering = ("-build_time_iso")
