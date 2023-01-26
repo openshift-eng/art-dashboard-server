@@ -16,15 +16,15 @@ class UserFilter(django_filters.FilterSet):
     class Meta:
         model = Build
         fields = {
-            "build_0_id": ["icontains"],
-            "dg_name": ["icontains"],
-            "brew_task_state": ["icontains"],
-            "brew_task_id": ["icontains"],
-            "group": ["icontains"],
-            "dg_commit": ["icontains"],
-            "label_io_openshift_build_commit_id": ["icontains"],
+            "build_0_id": ["icontains", "exact"],
+            "dg_name": ["icontains", "exact"],
+            "brew_task_state": ["exact"],
+            "brew_task_id": ["icontains", "exact"],
+            "group": ["icontains", "exact"],
+            "dg_commit": ["icontains", "exact"],
+            "label_io_openshift_build_commit_id": ["icontains", "exact"],
             "time_iso": ["exact"],
-            "jenkins_build_number": ["icontains"],
+            "jenkins_build_number": ["icontains", "exact"],
         }
 
 
