@@ -10,13 +10,19 @@ Build
     # repeat this to update the app as it changes
     podman build -f Dockerfile.update -t art-dash-server:latest --build-arg USERNAME=$USER --build-arg USER_UID=$(id -u) .
 
+Create podman network
+
+`podman network create art-dashboard-network`
+
 Start DB server
 
     podman run --net art-dashboard-network --name mariadb -e MARIADB_ROOT_PASSWORD=secret -e MARIADB_DATABASE=doozer_build -d docker.io/library/mariadb:latest
 
-Run container
+Download the test database as `test.sql`. Copy the file into the mariadb container using `sudo docker cp test.sql mariadb:.`
+bash into the mariadb container and run `mysql -u root -p < test.sql`. Password is `secret` as defined in the podman run command.
 
-    podman network create art-dashboard-network
+
+Run container
     
     OPENSHIFT=$HOME/ART-PyCharm-Projects    # CLone doozer, elliot and art-dash to this location.
 
