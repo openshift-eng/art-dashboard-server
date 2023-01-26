@@ -12,7 +12,7 @@ from rest_framework import viewsets, filters
 import django_filters
 
 
-class UserFilter(django_filters.FilterSet):
+class BuildDataFilter(django_filters.FilterSet):
     class Meta:
         model = Build
         fields = {
@@ -40,7 +40,7 @@ class BuildViewSet(viewsets.ReadOnlyModelViewSet):
                        filters.OrderingFilter]  # add feature to filter by URL request eg: /v1/builds/?page=2
     # Explicitly specify which fields the API may be ordered against
     # ordering_fields = ()
-    filterset_class = UserFilter
+    filterset_class = BuildDataFilter
 
     # This will be used as the default ordering
     ordering = ("-build_time_iso")
