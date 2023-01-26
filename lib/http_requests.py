@@ -173,5 +173,5 @@ def get_branch_advisory_ids(branch_name):
     advisories = get_advisories(branch_name)
 
     if advisories:
-        return {"current": advisories[0][-1], "previous": advisories[1][-1]}
+        return {advisories[0][0]: advisories[0][-1], advisories[1][0]: advisories[1][-1]}
     return {"current": {}, "previous": {}}

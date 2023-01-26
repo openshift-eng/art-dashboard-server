@@ -24,7 +24,7 @@ class UserFilter(django_filters.FilterSet):
             "dg_commit": ["icontains", "exact"],
             "label_io_openshift_build_commit_id": ["icontains", "exact"],
             "time_iso": ["exact"],
-            "jenkins_build_number": ["icontains", "exact"],
+            "jenkins_build_url": ["icontains", "exact"],
         }
 
 
