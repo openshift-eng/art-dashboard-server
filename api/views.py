@@ -12,18 +12,19 @@ from rest_framework import viewsets, filters
 import django_filters
 
 
-class UserFilter(django_filters.FilterSet):
+class BuildDataFilter(django_filters.FilterSet):
     class Meta:
         model = Build
         fields = {
-            "build_0_id": ["icontains"],
-            "dg_name": ["icontains"],
-            "brew_task_state": ["icontains"],
-            "brew_task_id": ["icontains"],
-            "group": ["icontains"],
-            "dg_commit": ["icontains"],
-            "label_io_openshift_build_commit_id": ["icontains"],
+            "build_0_id": ["icontains", "exact"],
+            "dg_name": ["icontains", "exact"],
+            "brew_task_state": ["exact"],
+            "brew_task_id": ["icontains", "exact"],
+            "group": ["icontains", "exact"],
+            "dg_commit": ["icontains", "exact"],
+            "label_io_openshift_build_commit_id": ["icontains", "exact"],
             "time_iso": ["exact"],
+            "jenkins_build_url": ["icontains", "exact"],
         }
 
 
@@ -39,7 +40,7 @@ class BuildViewSet(viewsets.ReadOnlyModelViewSet):
                        filters.OrderingFilter]  # add feature to filter by URL request eg: /v1/builds/?page=2
     # Explicitly specify which fields the API may be ordered against
     # ordering_fields = ()
-    filterset_class = UserFilter
+    filterset_class = BuildDataFilter
 
     # This will be used as the default ordering
     ordering = ("-build_time_iso")
