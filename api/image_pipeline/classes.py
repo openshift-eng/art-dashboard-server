@@ -19,9 +19,9 @@ class Brew:
         self.brew_id = 0
         self.brew_build_url = ""
         self.brew_package_name = ""
-        self.bundle_component = ""
-        self.bundle_distgit = ""
-        self.payload_tag = ""
+        self.bundle_component = None
+        self.bundle_distgit = None
+        self.payload_tag = None
         self.cdn = []
 
 
