@@ -91,34 +91,19 @@ def distgit_to_delivery(distgit_repo_name: str, version: str, variant: str) -> B
     :variant: RHOSE variant
     """
     # Distgit -> Brew
-    brew_package_name = distgit_to_brew(distgit_repo_name, version)
-    brew_id = get_brew_id(brew_package_name)
+    brew_name = distgit_to_brew(distgit_repo_name, version)
+    brew_id = get_brew_id(brew_name)
 
     brew_object = Brew()
     brew_object.brew_id = brew_id
     brew_object.brew_build_url = f"https://brewweb.engineering.redhat.com/brew/packageinfo?packageID={brew_id}"
-    brew_object.brew_package_name = brew_package_name
-    brew_object.bundle_component = 'None'
-    brew_object.bundle_distgit = 'None'
-    brew_object.payload_tag = 'None'
+    brew_object.brew_package_name = brew_name
 
     # Bundle Builds
-    if require_bundle_build(distgit_repo_name, version):
-        bundle_component = get_bundle_override(distgit_repo_name, version)
-        if not bundle_component:
-            bundle_component = f"{'-'.join(brew_package_name.split('-')[:-1])}-metadata-component"
-        bundle_distgit = f"{distgit_repo_name}-bundle"
-
-        brew_object.bundle_component = bundle_component
-        brew_object.bundle_distgit = bundle_distgit
-
-    # Tag
-    tag = get_image_stream_tag(distgit_repo_name, version)
-    if tag:
-        brew_object.payload_tag = tag
+    bundle_builds(brew_object, distgit_repo_name, version, brew_name)
 
     # Brew -> Delivery
-    brew_to_delivery(brew_package_name, variant, brew_object)
+    brew_to_delivery(brew_name, variant, brew_object)
 
     return brew_object
 
@@ -135,6 +120,22 @@ def brew_is_available(brew_name: str) -> bool:
         return True
     except exceptions.BrewIdNotFound:
         return False
+
+
+def bundle_builds(brew_object: Brew, distgit_repo_name: str, version: str, brew_name: str):
+    if require_bundle_build(distgit_repo_name, version):
+        bundle_component = get_bundle_override(distgit_repo_name, version)
+        if not bundle_component:
+            bundle_component = f"{'-'.join(brew_name.split('-')[:-1])}-metadata-component"
+        bundle_distgit = f"{distgit_repo_name}-bundle"
+
+        brew_object.bundle_component = bundle_component
+        brew_object.bundle_distgit = bundle_distgit
+
+    # Tag
+    tag = get_image_stream_tag(distgit_repo_name, version)
+    if tag:
+        brew_object.payload_tag = tag
 
 
 def brew_to_github(brew_name: str, version: str) -> tuple[Github, Distgit, Brew]:
@@ -162,26 +163,11 @@ def brew_to_github(brew_name: str, version: str) -> tuple[Github, Distgit, Brew]
     distgit_object.distgit_url = f"https://pkgs.devel.redhat.com/cgit/containers/{distgit_repo_name}"
 
     brew_object = Brew()
-    brew_object.bundle_component = 'None'
-    brew_object.bundle_distgit = 'None'
-    brew_object.payload_tag = 'None'
 
     # To keep the presented order same
 
     # Bundle Builds
-    if require_bundle_build(distgit_repo_name, version):
-        bundle_component = get_bundle_override(distgit_repo_name, version)
-        if not bundle_component:
-            bundle_component = f"{'-'.join(brew_name.split('-')[:-1])}-metadata-component"
-        bundle_distgit = f"{distgit_repo_name}-bundle"
-
-        brew_object.bundle_component = bundle_component
-        brew_object.bundle_distgit = bundle_distgit
-
-    # Tag
-    tag = get_image_stream_tag(distgit_repo_name, version)
-    if tag:
-        brew_object.payload_tag = tag
+    bundle_builds(brew_object, distgit_repo_name, version, brew_name)
 
     return github_object, distgit_object, brew_object
 
