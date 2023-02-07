@@ -1,6 +1,7 @@
 """
 This module has helper functions to make http requests to other apis.
 """
+import pprint
 
 import requests
 import ocp_build_data.constants as app_constants
@@ -9,8 +10,10 @@ import traceback
 import os
 import yaml
 import time
+import logging
 
 HEADERS = {"Authorization": f"token {os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']}"}
+logger = logging.getLogger(__name__)
 
 
 def get_all_ocp_build_data_branches():
@@ -158,9 +161,20 @@ def get_advisories(branch_name):
 
         advisories = get_particular_advisory(yml_data[version])
         if advisories:
-            advisory_data.append([version, advisories])
+            jira_link = get_jira_link(yml_data[version])
+            advisory_data.append([version, advisories, jira_link])
 
     return advisory_data
+
+
+def get_jira_link(data):
+    try:
+        jira_link = data['assembly']['group']['release_jira']
+        logger.debug(f"JIRA: {jira_link}")
+        return jira_link
+    except KeyError:
+        logger.error("Could not find jira link")
+        return None
 
 
 def get_branch_advisory_ids(branch_name):
@@ -171,7 +185,8 @@ def get_branch_advisory_ids(branch_name):
         return {"current": yml_data, "previous": {}}
 
     advisories = get_advisories(branch_name)
+    logger.debug(f"Advisories: {pprint.pformat(advisories)}")
 
     if advisories:
-        return {advisories[0][0]: advisories[0][-1], advisories[1][0]: advisories[1][-1]}
+        return {advisories[0][0]: [advisories[0][1], advisories[0][2]], advisories[1][0]: [advisories[1][1], advisories[1][2]]}
     return {"current": {}, "previous": {}}
