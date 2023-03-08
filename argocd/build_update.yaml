@@ -1,0 +1,60 @@
+apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: art-dash-server
+    name: art-dash-server-update
+  spec:
+    failedBuildsHistoryLimit: 5
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: art-dash-server:latest
+    runPolicy: Serial
+    source:
+      git:
+        ref: master
+        uri: https://github.com/openshift-eng/art-dashboard-server
+      type: Git
+    strategy:
+      dockerStrategy:
+        # DB migrations are performed at build time; runtime might make more
+        # sense but then you could have multiple pods trying to do the same
+        # migration at the same time, so stick with this for now.
+        env:
+          - name: RUN_ENV
+            value: production
+          - name: DJANGO_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: django-key
+                key: django-key
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-configs
+                key: database-user
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-configs
+                key: database-password
+          - name: MYSQL_HOST
+            value: mariadb.aos-art-web.svc
+          - name: GITHUB_PERSONAL_ACCESS_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: github-token-powerful
+                key: github-token
+        from:
+          kind: ImageStreamTag
+          name: art-dash-server:base
+        dockerfilePath: Dockerfile.update
+      type: Docker
+    successfulBuildsHistoryLimit: 5
+    triggers:
+      - imageChange:
+          lastTriggeredImageID: null
+        type: ImageChange
+      - type: ConfigChange

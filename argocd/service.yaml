@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: art-dash-server
+  name: art-dash-server
+spec:
+  ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: art-dash-server
+    deploymentconfig: art-dash-server
+  sessionAffinity: None
+  type: ClusterIP
