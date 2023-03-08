@@ -1,80 +1,80 @@
 apiVersion: apps.openshift.io/v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: art-dash-server
-    name: art-dash-server
-  spec:
-    replicas: 1
-    revisionHistoryLimit: 10
-    selector:
-      app: art-dash-server
-      deploymentconfig: art-dash-server
-    strategy:
-      activeDeadlineSeconds: 21600
-      resources: { }
-      rollingParams:
-        intervalSeconds: 1
-        maxSurge: 25%
-        maxUnavailable: 25%
-        timeoutSeconds: 600
-        updatePeriodSeconds: 1
-      type: Rolling
-    template:
-      metadata:
-        labels:
-          app: art-dash-server
-          deploymentconfig: art-dash-server
-      spec:
-        containers:
-          - env:
-              - name: RUN_ENV
-                value: production
-              - name: GITHUB_RATELIMIT_ENDPOINT
-                value: 'https://api.github.com/rate_limit'
-              - name: GITHUB_RAW_CONTENT_URL
-                value: 'https://raw.githubusercontent.com/openshift/ocp-build-data'
-              - name: GITHUB_ALL_COMMITS_GROUPYML
-                value: >-
-                  https://api.github.com/repos/openshift/ocp-build-data/commits?sha={}&path=group.yml
-              - name: ERRATA_ADVISORY_ENDPOINT
-                value: 'https://errata.devel.redhat.com/api/v1/erratum/{}'
-              - name: ERRATA_USER_ENDPOINT
-                value: 'https://errata.devel.redhat.com/api/v1/user/{}'
-            imagePullPolicy: Always
-            name: art-dash-server
-            ports:
-              - containerPort: 8080
-                protocol: TCP
-            resources:
-              limits:
-                cpu: 250m
-                memory: 500Mi
-            terminationMessagePath: /dev/termination-log
-            terminationMessagePolicy: File
-            volumeMounts:
-              - mountPath: /opt/app-root/src/.keytab/
-                name: errata-keytab-lwwzd
-                readOnly: true
-        dnsPolicy: ClusterFirst
-        restartPolicy: Always
-        schedulerName: default-scheduler
-        securityContext: { }
-        terminationGracePeriodSeconds: 30
-        volumes:
-          - name: errata-keytab-lwwzd
-            secret:
-              defaultMode: 420
-              secretName: errata-keytab
-    test: false
-    triggers:
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-            - art-dash-server
-          from:
-            kind: ImageStreamTag
-            name: art-dash-server:latest
-          lastTriggeredImage: null
-        type: ImageChange
-      - type: ConfigChange
+kind: DeploymentConfig
+metadata:
+  labels:
+    app: art-dash-server
+  name: art-dash-server
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    app: art-dash-server
+    deploymentconfig: art-dash-server
+  strategy:
+    activeDeadlineSeconds: 21600
+    resources: { }
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 600
+      updatePeriodSeconds: 1
+    type: Rolling
+  template:
+    metadata:
+      labels:
+        app: art-dash-server
+        deploymentconfig: art-dash-server
+    spec:
+      containers:
+        - env:
+            - name: RUN_ENV
+              value: production
+            - name: GITHUB_RATELIMIT_ENDPOINT
+              value: 'https://api.github.com/rate_limit'
+            - name: GITHUB_RAW_CONTENT_URL
+              value: 'https://raw.githubusercontent.com/openshift/ocp-build-data'
+            - name: GITHUB_ALL_COMMITS_GROUPYML
+              value: >-
+                https://api.github.com/repos/openshift/ocp-build-data/commits?sha={}&path=group.yml
+            - name: ERRATA_ADVISORY_ENDPOINT
+              value: 'https://errata.devel.redhat.com/api/v1/erratum/{}'
+            - name: ERRATA_USER_ENDPOINT
+              value: 'https://errata.devel.redhat.com/api/v1/user/{}'
+          imagePullPolicy: Always
+          name: art-dash-server
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 250m
+              memory: 500Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /opt/app-root/src/.keytab/
+              name: errata-keytab-lwwzd
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: { }
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: errata-keytab-lwwzd
+          secret:
+            defaultMode: 420
+            secretName: errata-keytab
+  test: false
+  triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - art-dash-server
+        from:
+          kind: ImageStreamTag
+          name: art-dash-server:latest
+        lastTriggeredImage: null
+      type: ImageChange
+    - type: ConfigChange
