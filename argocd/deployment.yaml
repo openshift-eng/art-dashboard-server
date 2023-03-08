@@ -41,6 +41,23 @@ spec:
               value: 'https://errata.devel.redhat.com/api/v1/erratum/{}'
             - name: ERRATA_USER_ENDPOINT
               value: 'https://errata.devel.redhat.com/api/v1/user/{}'
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-key
+                  key: django-key
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-configs
+                  key: database-user
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-configs
+                  key: database-password
+            - name: MYSQL_HOST
+              value: mariadb-aos-art-web.apps.ocp4.prod.psi.redhat.com
           imagePullPolicy: Always
           name: art-dash-server
           ports:
