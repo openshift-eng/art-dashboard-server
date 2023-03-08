@@ -41,7 +41,7 @@ spec:
               name: mariadb-configs
               key: database-password
         - name: MYSQL_HOST
-          value: mariadb.aos-art-web.svc
+          value: https://mariadb-aos-art-web.apps.ocp4.prod.psi.redhat.com
         - name: GITHUB_PERSONAL_ACCESS_TOKEN
           valueFrom:
             secretKeyRef:
