@@ -1,0 +1,21 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: art-dashboard-server-cname
+  labels:
+    app: art-dashboard-server
+spec:
+  host: art-dashboard-server.engineering.redhat.com
+  to:
+    kind: Service
+    name: art-dash-ui
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None
+status:
+  ingress:
+    - host: art-dashboard-server.engineering.redhat.com
+      routerName: default
+      wildcardPolicy: None
+      routerCanonicalHostname: router-default.apps.ocp4.prod.psi.redhat.com
