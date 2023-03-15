@@ -88,7 +88,7 @@ def pipeline_from_github_api_endpoint(request):
     version = request.query_params.get("version", None)
 
     # validate input
-    if re.match(r"^[a-z]+$", starting_from) and re.match(r"^[a-z0-9/\-]+$", name) and re.match(r"^\d+.\d+$", version):
+    if re.match(r"^[A-Za-z]+$", starting_from) and re.match(r"^[A-Za-z0-9/\-]+$", name) and re.match(r"^\d+.\d+$", version):
         try:
             if not version:
                 version = get_ga_version()  # Default version set to GA version, if unspecified
@@ -97,27 +97,27 @@ def pipeline_from_github_api_endpoint(request):
                 result, status_code = pipeline_image_names.pipeline_from_github(name, version)
             elif starting_from.lower().strip() == "distgit":
                 result, status_code = pipeline_image_names.pipeline_from_distgit(name, version)
-            elif starting_from.lower().strip() == "brew":
-                result, status_code = pipeline_image_names.pipeline_from_brew(name, version)
+            elif starting_from.lower().strip() == "package":
+                result, status_code = pipeline_image_names.pipeline_from_package(name, version)
             elif starting_from.lower().strip() == "cdn":
                 result, status_code = pipeline_image_names.pipeline_from_cdn(name, version)
-            elif starting_from.lower().strip() == "delivery":
-                result, status_code = pipeline_image_names.pipeline_from_delivery(name, version)
+            elif starting_from.lower().strip() == "image":
+                result, status_code = pipeline_image_names.pipeline_from_image(name, version)
             else:
                 result, status_code = {
-                                          "status": "error",
-                                          "payload": "Invalid value in field 'starting_from'"
-                                      }, 400
+                    "status": "error",
+                    "payload": "Invalid value in field 'starting_from'"
+                }, 400
         except Exception:
             result, status_code = {
-                                      "status": "error",
-                                      "payload": "Error while retrieving GA version"
-                                  }, 500
+                "status": "error",
+                "payload": "Error while retrieving the image pipeline"
+            }, 500
     else:
         result, status_code = {
-                                  "status": "error",
-                                  "payload": "Invalid input values"
-                              }, 400
+            "status": "error",
+            "payload": "Invalid input values"
+        }, 400
 
     json_string = json.loads(json.dumps(result, default=lambda o: o.__dict__))
 
@@ -128,14 +128,14 @@ def pipeline_from_github_api_endpoint(request):
 def ga_version(request):
     try:
         result, status_code = {
-                                  "status": "success",
-                                  "payload": get_ga_version()
-                              }, 200
+            "status": "success",
+            "payload": get_ga_version()
+        }, 200
     except Exception:
         result, status_code = {
-                                  "status": "error",
-                                  "payload": "Error while retrieving GA version"
-                              }, 500
+            "status": "error",
+            "payload": "Error while retrieving GA version"
+        }, 500
 
     json_string = json.loads(json.dumps(result, default=lambda o: o.__dict__))
 
