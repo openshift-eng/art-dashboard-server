@@ -94,7 +94,7 @@ def pipeline_from_distgit(distgit_repo_name, version) -> Tuple[Dict[str, str], i
            }, 200
 
 
-def pipeline_from_brew(brew_name, version) -> Tuple[Dict[str, str], int]:
+def pipeline_from_package(brew_name, version) -> Tuple[Dict[str, str], int]:
     """
     Function to list the GitHub repo, Brew package name, CDN repo name and delivery repo by getting the brew name as input.
 
@@ -172,7 +172,7 @@ def pipeline_from_cdn(cdn_repo_name, version) -> Tuple[Dict[str, str], int]:
            }, 200
 
 
-def pipeline_from_delivery(delivery_repo_name, version) -> Tuple[Dict[str, str], int]:
+def pipeline_from_image(delivery_repo_name, version) -> Tuple[Dict[str, str], int]:
     """
     Function to list the GitHub repo, Brew package name, CDN repo name and delivery repo by getting the delivery repo name as input.
 
