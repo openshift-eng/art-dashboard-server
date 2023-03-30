@@ -2,7 +2,7 @@
 
 ![run-tox badge](https://github.com/openshift-eng/art-dashboard-server/actions/workflows/run_tox.yml/badge.svg)
 
-Build
+Build 
     
     # only required once unless RPM reqs change
     podman build -f Dockerfile.base -t art-dash-server:base --build-arg USERNAME=$USER --build-arg USER_UID=$(id -u) .
