@@ -20,7 +20,7 @@ Start DB server
 
 Download the test database as `test.sql`. Copy the file into the mariadb container using `sudo docker cp test.sql mariadb:.`
 bash into the mariadb container and run `mysql -u root -p < test.sql`. Password is `secret` as defined in the podman run command.
-
+ 
 
 Run container
     
