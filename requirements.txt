@@ -5,9 +5,9 @@ cachetools==5.2.0
 certifi==2022.12.7
 cffi==1.15.1
 chardet==3.0.4
-cryptography==38.0.3
+cryptography==39.0.1
 decorator==4.4.2
-Django==4.1.6
+Django==4.1.7
 django-cors-headers==3.13.0
 django-extensions==3.2.1
 djangorestframework==3.13.1
@@ -31,6 +31,6 @@ requests-kerberos==0.14.0
 s3transfer==0.6.0
 six==1.15.0
 sqlparse==0.4.2
-urllib3==1.25.8
+urllib3==1.26.5
 schedule==1.1.0
 django-filter==22.1
