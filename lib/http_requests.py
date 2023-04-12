@@ -188,5 +188,17 @@ def get_branch_advisory_ids(branch_name):
     logger.debug(f"Advisories: {pprint.pformat(advisories)}")
 
     if advisories:
-        return {advisories[0][0]: [advisories[0][1], advisories[0][2]], advisories[1][0]: [advisories[1][1], advisories[1][2]]}
+        jira_link_current = None
+        try:
+            jira_link_current = advisories[0][2]
+        except IndexError:
+            pass
+
+        jira_link_previous = None
+        try:
+            jira_link_previous = advisories[1][2]
+        except IndexError:
+            pass
+
+        return {advisories[0][0]: [advisories[0][1], jira_link_current], advisories[1][0]: [advisories[1][1], jira_link_previous]}
     return {"current": {}, "previous": {}}
