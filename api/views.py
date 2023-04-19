@@ -10,6 +10,8 @@ import re
 from . import request_dispatcher
 from rest_framework import viewsets, filters
 import django_filters
+from . import rpm_and_image_fetcher
+
 
 
 class BuildDataFilter(django_filters.FilterSet):
@@ -160,3 +162,18 @@ def test(request):
         "status": "success",
         "payload": "Setup successful!"
     }, status=200)
+
+@api_view(["GET"])
+def fetch_github_data(request):
+    try:
+        result = rpm_and_image_fetcher.fetch_data()
+        return Response({
+            "status": "success",
+            "payload": result
+        }, status=200)
+    except Exception as e:
+        return Response({
+            "status": "error",
+            "payload": f"An error occurred while fetching data from GitHub: {e}"
+        }, status=500)
+
