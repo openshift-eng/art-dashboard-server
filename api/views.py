@@ -10,7 +10,7 @@ import re
 from . import request_dispatcher
 from rest_framework import viewsets, filters
 import django_filters
-from . import rpm_and_image_fetcher
+from . import rpms_images_fetcher
 
 
 
@@ -164,9 +164,9 @@ def test(request):
     }, status=200)
 
 @api_view(["GET"])
-def fetch_github_data(request):
+def rpms_images_fetcher_view(request): 
     try:
-        result = rpm_and_image_fetcher.fetch_data()
+        result = rpms_images_fetcher.fetch_data()  
         return Response({
             "status": "success",
             "payload": result
@@ -176,4 +176,3 @@ def fetch_github_data(request):
             "status": "error",
             "payload": f"An error occurred while fetching data from GitHub: {e}"
         }, status=500)
-

@@ -14,6 +14,7 @@ djangorestframework==3.13.1
 docutils==0.19
 environ==1.0
 errata-tool==1.29.0
+ghapi==1.0.3
 idna==2.10
 jmespath==1.0.1
 jsonpath-rw==1.4.0

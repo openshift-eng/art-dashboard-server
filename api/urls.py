@@ -11,6 +11,6 @@ urlpatterns = [
     re_path('ga-version', views.ga_version),
     re_path('branch/', views.branch_data, name='branch_data_view'),
     re_path('test', views.test),
-    re_path('fetch-github-data', views.fetch_github_data)
+    re_path('rpms_images_fetcher', views.rpms_images_fetcher_view)
 
 ]
