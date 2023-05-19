@@ -1,17 +1,19 @@
-from build.models import Build
-from .serializer import BuildSerializer
+from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
+from api.fetchers import rpms_images_fetcher
 from api.image_pipeline import pipeline_image_names
 from api.util import get_ga_version
+from build.models import Build
+from . import request_dispatcher
+from .serializer import BuildSerializer
+
+import django_filters
 import json
 import re
-from . import request_dispatcher
-from rest_framework import viewsets, filters
-import django_filters
-from . import rpms_images_fetcher
-
 
 
 class BuildDataFilter(django_filters.FilterSet):
@@ -163,16 +165,30 @@ def test(request):
         "payload": "Setup successful!"
     }, status=200)
 
+
 @api_view(["GET"])
-def rpms_images_fetcher_view(request): 
-    try:
-        result = rpms_images_fetcher.fetch_data()  
-        return Response({
-            "status": "success",
-            "payload": result
-        }, status=200)
-    except Exception as e:
-        return Response({
-            "status": "error",
-            "payload": f"An error occurred while fetching data from GitHub: {e}"
-        }, status=500)
+def rpms_images_fetcher_view(request):
+    release = request.query_params.get("release", None)
+
+    if release is None:
+        return Response(data={"status": "error", "message": "Missing \"release\" params in the url."})
+
+    # Try to fetch data from cache
+    cache_key = f"rpms_images_data_{release}"
+    result = cache.get(cache_key)
+
+    if result is None:
+        # If data is not in the cache, fetch it and store it in the cache
+        try:
+            result = rpms_images_fetcher.fetch_data(release)
+            cache.set(cache_key, result)
+        except Exception as e:
+            return Response({
+                "status": "error",
+                "payload": f"An error occurred while fetching data from GitHub: {e}"
+            }, status=500)
+
+    return Response({
+        "status": "success",
+        "payload": result
+    }, status=200)
