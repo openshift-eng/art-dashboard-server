@@ -1,11 +1,11 @@
 import os
 import requests
 import json
-import base64
-import gssapi
-from urllib.parse import urlparse
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 from .decorators import update_keytab
+from urllib.parse import urlparse
+from requests_gssapi import HTTPSPNEGOAuth
+import ssl
 
 
 @update_keytab
@@ -18,20 +18,9 @@ def get_advisory_data(advisory_id):
 
     try:
         errata_endpoint = os.environ["ERRATA_ADVISORY_ENDPOINT"]
-        errata_endpoint = errata_endpoint.format(advisory_id)
 
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-        server_name = gssapi.Name(f"HTTP@{urlparse(urlparse(os.environ['ERRATA_SERVER']).geturl()).hostname}", gssapi.NameType.hostbased_service)
-        client_ctx = gssapi.SecurityContext(name=server_name, usage='initiate')
-        out_token = client_ctx.step(b"")
-        headers["Authorization"] = 'Negotiate ' + base64.b64encode(out_token).decode()
-        response = requests.get(urlparse(errata_endpoint).geturl(), headers=headers)
-        advisory_data = json.loads(response.text)
-        response = format_advisory_data(advisory_data)
-        return response
+        response = requests.get(urlparse(errata_endpoint.format(advisory_id)).geturl(), verify=ssl.get_default_verify_paths().openssl_cafile, auth=HTTPSPNEGOAuth())
+        return format_advisory_data(json.loads(response.text))
     except Exception as e:
         print(e)
         return None
@@ -47,20 +36,9 @@ def get_user_data(user_id):
 
     try:
         errata_endpoint = os.environ["ERRATA_USER_ENDPOINT"]
-        errata_endpoint = errata_endpoint.format(user_id)
 
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-        server_name = gssapi.Name(f"HTTP@{urlparse(urlparse(os.environ['ERRATA_SERVER']).geturl()).hostname}", gssapi.NameType.hostbased_service)
-        client_ctx = gssapi.SecurityContext(name=server_name, usage='initiate')
-        out_token = client_ctx.step(b"")
-        headers["Authorization"] = 'Negotiate ' + base64.b64encode(out_token).decode()
-        response = requests.get(urlparse(errata_endpoint).geturl(), headers=headers)
-        user_data = json.loads(response.text)
-        response = format_user_data(user_data)
-        return response
+        response = requests.get(urlparse(errata_endpoint.format(user_id)).geturl(), verify=ssl.get_default_verify_paths().openssl_cafile, auth=HTTPSPNEGOAuth())
+        return format_user_data(json.loads(response.text))
     except Exception as e:
         print(e)
         return None
