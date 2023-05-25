@@ -173,20 +173,14 @@ def rpms_images_fetcher_view(request):
     if release is None:
         return Response(data={"status": "error", "message": "Missing \"release\" params in the url."})
 
-    # Try to fetch data from cache
-    cache_key = f"rpms_images_data_{release}"
-    result = cache.get(cache_key)
-
-    if result is None:
-        # If data is not in the cache, fetch it and store it in the cache
-        try:
-            result = rpms_images_fetcher.fetch_data(release)
-            cache.set(cache_key, result)
-        except Exception as e:
-            return Response({
-                "status": "error",
-                "payload": f"An error occurred while fetching data from GitHub: {e}"
-            }, status=500)
+    # Always fetch data
+    try:
+        result = fetch_data(release)
+    except Exception as e:
+        return Response({
+            "status": "error",
+            "payload": f"An error occurred while fetching data from GitHub: {e}"
+        }, status=500)
 
     return Response({
         "status": "success",
