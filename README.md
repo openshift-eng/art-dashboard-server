@@ -68,7 +68,7 @@ podman run -it --rm -p 8080:8080 --net art-dashboard-network \
 -v "$OPENSHIFT/art-dashboard-server":/workspaces/art-dash:cached,z \
 -v $OPENSHIFT/doozer/:/workspaces/doozer/:cached,z \
 -v $OPENSHIFT/elliott/:/workspaces/elliott/:cached,z \
--v $HOME/.ssh:/home/$USER/.ssh:ro,cached,z \ 
+-v $HOME/.ssh:/home/$USER/.ssh:ro,cached,z \
 -v $HOME/.docker/config.json:/home/$USER/.docker/config.json:ro,cached,z \
 -v $HOME/.gitconfig:/home/$USER/.gitconfig:ro,cached,z \
 -e RUN_ENV=development \
