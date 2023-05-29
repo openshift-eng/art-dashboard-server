@@ -5,7 +5,7 @@ on: [ push, pull_request_target ]
 jobs:
   snyk:
     runs-on: ubuntu-latest
-    if: contains(fromJSON('["jupierce", "sosiouxme", "thiagoalessio", "joepvd", "thegreyd", "vfreex", "locriandev", "Ximinhan", "ashwindasr"]'), github.actor) && github.repository == 'openshift-eng/art-dashboard-server'
+    if: contains(fromJSON('["jupierce", "sosiouxme", "thiagoalessio", "joepvd", "thegreyd", "vfreex", "locriandev", "Ximinhan", "ashwindasr", "MartinPl0"]'), github.actor) && github.repository == 'openshift-eng/art-dashboard-server'
     steps:
       - name: Checkout the base branch to get the secret
         uses: actions/checkout@v3

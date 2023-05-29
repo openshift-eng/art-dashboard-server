@@ -52,6 +52,7 @@ ALLOWED_HOSTS = [
     'art-dash-server-aos-art-web.apps.ocp4.prod.psi.redhat.com',
     'art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com',
     'art-dashboard-server-1-art-build-dev.apps.ocp4.prod.psi.redhat.com',
+    'art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com',
 ]
 
 # Application definition
