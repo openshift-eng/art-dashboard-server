@@ -13,6 +13,7 @@ api = GhApi(owner=REPO_OWNER, repo=REPO_NAME, token=GITHUB_TOKEN)
 # Set up logging
 logger = logging.getLogger(__name__)
 
+
 def get_directory_contents(branch, directory):
     """
     Fetches the contents of a directory in a given branch of the GitHub repository.
@@ -25,6 +26,7 @@ def get_directory_contents(branch, directory):
         The contents of the directory.
     """
     return api.repos.get_content(owner=REPO_OWNER, repo=REPO_NAME, path=directory, ref=branch)
+
 
 def fetch_data(release):
     """
