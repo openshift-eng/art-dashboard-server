@@ -175,7 +175,7 @@ def rpms_images_fetcher_view(request):
 
     # Always fetch data
     try:
-        result = fetch_data(release)
+        result = rpms_images_fetcher.fetch_data(release)
     except Exception as e:
         return Response({
             "status": "error",
