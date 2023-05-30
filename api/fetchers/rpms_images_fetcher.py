@@ -44,13 +44,13 @@ def fetch_data(release):
     rpms_content = get_directory_contents(release, "rpms")
     images_content = get_directory_contents(release, "images")
 
-    rpms = [rpm["name"] for rpm in rpms_content if rpm["type"] == "file"]
-    images = [image["name"] for image in images_content if image["type"] == "file"]
+    rpms_in_distgit = [rpm["name"].replace('.yml', '') for rpm in rpms_content if rpm["type"] == "file"]
+    images_in_distgit = [image["name"].replace('.yml', '') for image in images_content if image["type"] == "file"]
 
     result.append({
         "branch": release,
-        "rpms": rpms,
-        "images": images,
+        "rpms_in_distgit": rpms_in_distgit,
+        "images_in_distgit": images_in_distgit,
     })
 
     return result
