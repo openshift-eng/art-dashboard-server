@@ -173,7 +173,7 @@ release: The name of the release (branch in the repository).
 
 eg:
 
-Request: `localhost:8080/api/v1/rpms-images-fetcher?release=openshift-4.11`
+Request: `http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1/rpms-images-fetcher?release=openshift-4.11`
 
 Response:
 
