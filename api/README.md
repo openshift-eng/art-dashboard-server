@@ -162,3 +162,30 @@ Response:
   "payload": "Setup successful"
 }
 ```
+
+### GET /api/v1/rpms-images-fetcher
+
+This endpoint fetches and returns the rpms and images data for a specific release from the GitHub repository. The release corresponds to a branch in the repository.
+
+Request payload:
+
+release: The name of the release (branch in the repository).
+
+eg:
+
+Request: `http://art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com/api/v1/rpms-images-fetcher?release=openshift-4.11`
+
+Response:
+
+```json
+{
+    "status": "success",
+    "payload": [
+        {
+            "branch": "openshift-4.11",
+            "rpms_in_distgit": [...],
+            "images_in_distgit": [...]
+        }
+    ]
+}
+```
