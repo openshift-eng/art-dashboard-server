@@ -3,9 +3,6 @@ import requests
 import json
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 from .decorators import update_keytab
-from urllib.parse import urlparse
-from requests_gssapi import HTTPSPNEGOAuth
-import ssl
 
 
 @update_keytab
@@ -18,9 +15,14 @@ def get_advisory_data(advisory_id):
 
     try:
         errata_endpoint = os.environ["ERRATA_ADVISORY_ENDPOINT"]
+        errata_endpoint = errata_endpoint.format(advisory_id)
 
-        response = requests.get(urlparse(errata_endpoint.format(advisory_id)).geturl(), verify=ssl.get_default_verify_paths().openssl_cafile, auth=HTTPSPNEGOAuth())
-        return format_advisory_data(json.loads(response.text))
+        kerberos_auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+        response = requests.get(errata_endpoint, auth=kerberos_auth, verify=False)
+        advisory_data = json.loads(response.text)
+        response = format_advisory_data(advisory_data)
+        return response
     except Exception as e:
         print(e)
         return None
@@ -36,9 +38,14 @@ def get_user_data(user_id):
 
     try:
         errata_endpoint = os.environ["ERRATA_USER_ENDPOINT"]
+        errata_endpoint = errata_endpoint.format(user_id)
 
-        response = requests.get(urlparse(errata_endpoint.format(user_id)).geturl(), verify=ssl.get_default_verify_paths().openssl_cafile, auth=HTTPSPNEGOAuth())
-        return format_user_data(json.loads(response.text))
+        kerberos_auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+
+        response = requests.get(errata_endpoint, auth=kerberos_auth, verify=False)
+        user_data = json.loads(response.text)
+        response = format_user_data(user_data)
+        return response
     except Exception as e:
         print(e)
         return None

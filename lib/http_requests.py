@@ -11,7 +11,6 @@ import os
 import yaml
 import time
 import logging
-from urllib.parse import urlparse
 
 HEADERS = {"Authorization": f"token {os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']}"}
 logger = logging.getLogger(__name__)
@@ -80,8 +79,8 @@ def get_github_rate_limit_status():
 
 
 def get_http_data(url):
-    response = requests.get(urlparse(url).geturl(), headers=HEADERS)
-    yml_data = yaml.load(response.text, Loader=yaml.SafeLoader)
+    response = requests.get(url, headers=HEADERS)
+    yml_data = yaml.load(response.text, Loader=yaml.Loader)
     return yml_data
 
 
