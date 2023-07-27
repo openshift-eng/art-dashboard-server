@@ -1,19 +1,22 @@
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from rest_framework.decorators import api_view
+from rest_framework import filters, viewsets, status
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-
 from api.fetchers import rpms_images_fetcher
 from api.image_pipeline import pipeline_image_names
 from api.util import get_ga_version
 from build.models import Build
 from . import request_dispatcher
 from .serializer import BuildSerializer
-
 import django_filters
 import json
 import re
+import os
+import jwt
+from datetime import datetime, timedelta
+from build_interface.settings import SECRET_KEY, SESSION_COOKIE_DOMAIN, CookieJWTAuthentication
 
 
 class BuildDataFilter(django_filters.FilterSet):
@@ -186,3 +189,36 @@ def rpms_images_fetcher_view(request):
         "status": "success",
         "payload": result
     }, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login_view(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if username == os.environ.get('ART_DASH_PRIVATE_USER') and password == os.environ.get('ART_DASH_PRIVATE_PASSWORD'):
+        # Create a JWT token
+        expiration = datetime.utcnow() + timedelta(hours=1)  # Set token to expire in 1 hour
+        token = jwt.encode({
+            'username': username,
+            'exp': expiration
+        }, SECRET_KEY, algorithm="HS256")
+
+        # Create a response
+        response = Response({'detail': 'Login successful'}, status=status.HTTP_200_OK)
+
+        # Set the token as an HTTP-only cookie in the response
+        response.set_cookie('token', token, httponly=True, max_age=3600, samesite='None', secure=True, domain=SESSION_COOKIE_DOMAIN)
+
+        return response
+
+    return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@authentication_classes([CookieJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def check_auth(request):
+    print(request.user)
+    return Response({'detail': 'Authenticated'}, status=status.HTTP_200_OK)
