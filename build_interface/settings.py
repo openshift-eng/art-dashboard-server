@@ -172,11 +172,6 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'https://art-dash.engineering.redhat.com']
 
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
