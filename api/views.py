@@ -1,8 +1,6 @@
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.auth import authenticate, login, get_user_model
-from django.contrib.auth.models import User
-from rest_framework import filters, viewsets, status
+from rest_framework import filters, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -16,7 +14,6 @@ from .serializer import BuildSerializer
 import django_filters
 import json
 import re
-import os
 
 
 class BuildDataFilter(django_filters.FilterSet):
@@ -189,41 +186,3 @@ def rpms_images_fetcher_view(request):
         "status": "success",
         "payload": result
     }, status=200)
-
-
-@api_view(["POST"])
-def login_view(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-
-    # Validate against environment variables
-    if username == os.environ.get('ART_DASH_PRIVATE_USER') and password == os.environ.get('ART_DASH_PRIVATE_PASSWORD'):
-        try:
-            # Fetch the user or create a new one if it does not exist
-            user, created = User.objects.get_or_create(username=username)
-            if created:
-                # If the user is created for the first time, set the password
-                user.set_password(password)
-                user.save()
-
-        except Exception as e:
-            return Response({'detail': f'Error during user creation or password setting: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # Authenticate the user
-        user = authenticate(request, username=username, password=password, backend='django.contrib.auth.backends.ModelBackend')
-
-        if user is not None:
-            login(request, user)
-            return Response({'detail': 'Login successful'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET'])
-def check_auth(request):
-    if request.user.is_authenticated:
-        return Response({'detail': 'Authenticated'}, status=status.HTTP_200_OK)
-    else:
-        return Response({'detail': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
