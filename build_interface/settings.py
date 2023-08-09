@@ -242,9 +242,10 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    '127.0.0.1',
-    'localhost',
+    'http://127.0.0.1',
+    'http://localhost',
     'https://art-dash.engineering.redhat.com',
     'https://art-dash-art-dashboard-ui.apps.artc2023.pc3z.p1.openshiftapps.com'
 ]
+
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
