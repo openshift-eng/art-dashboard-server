@@ -12,6 +12,43 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from dotenv import load_dotenv
+from rest_framework.authentication import SessionAuthentication, BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+import jwt
+from django.contrib.auth import get_user_model
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return
+
+
+class CookieJWTAuthentication(BaseAuthentication):
+
+    def authenticate(self, request):
+        token = request.COOKIES.get('token')
+        if not token:
+            return None
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token has expired')
+        except Exception:
+            raise AuthenticationFailed('Invalid token')
+
+        user = self.get_or_create_user(payload)
+
+        return (user, token)
+
+    def get_or_create_user(self, payload):
+        username = payload.get('username', None)
+        if username != os.environ.get('ART_DASH_PRIVATE_USER'):
+            raise AuthenticationFailed('Invalid token payload')
+
+        User = get_user_model()
+        user, _ = User.objects.get_or_create(username=username)
+        return user
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,12 +85,11 @@ SECRET_KEY = os.getenv(
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    '127.0.0.1', 'localhost',
-    'art-dash-server-aos-art-web.apps.ocp4.prod.psi.redhat.com',
-    'art-dash-server-art-build-dev.apps.ocp4.prod.psi.redhat.com',
-    'art-dashboard-server-1-art-build-dev.apps.ocp4.prod.psi.redhat.com',
-    'art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com',
+    '127.0.0.1',
+    'localhost',
+    'art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com'
 ]
+
 
 # Application definition
 
@@ -167,12 +203,48 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+# TO DO: setup CORS
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:3000',
+#     'https://art-dash.engineering.redhat.com',
+#     'http://art-dash-hackspace-martin.apps.artc2023.pc3z.p1.openshiftapps.com'
+# ]
+
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_DOMAIN = ".apps.artc2023.pc3z.p1.openshiftapps.com"
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'build_interface.settings.CookieJWTAuthentication',
+        'build_interface.settings.CsrfExemptSessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ]
+    ],
 }
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'page',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    '127.0.0.1',
+    'localhost',
+    'https://art-dash.engineering.redhat.com',
+    'https://art-dash-art-dashboard-ui.apps.artc2023.pc3z.p1.openshiftapps.com'
+]
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
