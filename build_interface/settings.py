@@ -88,7 +88,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     'https://art-dash.engineering.redhat.com',
-    'https://art-dash-art-dashboard-ui.apps.artc2023.pc3z.p1.openshiftapps.com'
+    'https://art-dash-art-dashboard-ui.apps.artc2023.pc3z.p1.openshiftapps.com',
     'art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com'
 ]
 
