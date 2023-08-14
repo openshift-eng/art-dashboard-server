@@ -211,11 +211,12 @@ CORS_ALLOW_CREDENTIALS = True
 #     'http://art-dash-hackspace-martin.apps.artc2023.pc3z.p1.openshiftapps.com'
 # ]
 
-SESSION_COOKIE_SAMESITE = 'None'
+
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_DOMAIN = ".apps.artc2023.pc3z.p1.openshiftapps.com"
+SESSION_COOKIE_DOMAIN = None
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
