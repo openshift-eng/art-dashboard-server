@@ -242,6 +242,7 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
     'page',
+    'Group__icontains',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
