@@ -23,28 +23,42 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
         return
 
 
-class CookieJWTAuthentication(BaseAuthentication):
+class JWTAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
-        token = request.COOKIES.get('token')
+        payload = None
+
+        # First, try to get the token from the Authorization header
+        token = request.headers.get('Authorization')
+        if token and token.startswith('Bearer '):
+            token = token.split('Bearer ')[1]
+        # If not in the header, try to get the token from the query parameters
+        elif 'token' in request.GET:
+            token = request.GET['token']
+
         if not token:
             return None
+
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Token has expired')
+            # If it's a login request, bypass the authentication and allow it to pass through
+            if request.path == "/api/v1/login":
+                return None
+            else:
+                raise AuthenticationFailed('Token has expired')
         except Exception:
             raise AuthenticationFailed('Invalid token')
 
-        user = self.get_or_create_user(payload)
+        if not payload:
+            raise AuthenticationFailed('Invalid token')
 
+        user = self.get_or_create_user(payload.get('username'))
         return (user, token)
 
-    def get_or_create_user(self, payload):
-        username = payload.get('username', None)
+    def get_or_create_user(self, username):
         if username != os.environ.get('ART_DASH_PRIVATE_USER'):
             raise AuthenticationFailed('Invalid token payload')
-
         User = get_user_model()
         user, _ = User.objects.get_or_create(username=username)
         return user
@@ -90,7 +104,7 @@ ALLOWED_HOSTS = [
     '0.0.0.0',
     'https://art-dash.engineering.redhat.com',
     'https://art-dash-art-dashboard-ui.apps.artc2023.pc3z.p1.openshiftapps.com',
-    'art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com'
+    'https://art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com'
 ]
 
 
@@ -207,12 +221,12 @@ STATIC_URL = '/static/'
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-# TO DO: setup CORS
-# CORS_ALLOWED_ORIGINS = [
-#     'http://localhost:3000',
-#     'https://art-dash.engineering.redhat.com',
-#     'http://art-dash-hackspace-martin.apps.artc2023.pc3z.p1.openshiftapps.com'
-# ]
+CORS_ALLOWED_ORIGINS = [
+    'https://art-dash.engineering.redhat.com',
+    'https://art-dash-art-dashboard-ui.apps.artc2023.pc3z.p1.openshiftapps.com',
+    'https://art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com'
+]
+
 
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
@@ -224,7 +238,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'build_interface.settings.CookieJWTAuthentication',
+        'build_interface.settings.JWTAuthentication',
         'build_interface.settings.CsrfExemptSessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
@@ -249,7 +263,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1',
     'http://localhost',
     'https://art-dash.engineering.redhat.com',
-    'https://art-dash-art-dashboard-ui.apps.artc2023.pc3z.p1.openshiftapps.com'
+    'https://art-dash-art-dashboard-ui.apps.artc2023.pc3z.p1.openshiftapps.com',
+    'https://art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com'
 ]
 
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
