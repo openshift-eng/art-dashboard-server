@@ -16,7 +16,7 @@ import re
 import os
 import jwt
 from datetime import datetime, timedelta
-from build_interface.settings import SECRET_KEY, SESSION_COOKIE_DOMAIN, CookieJWTAuthentication
+from build_interface.settings import SECRET_KEY, SESSION_COOKIE_DOMAIN, JWTAuthentication
 
 
 class BuildDataFilter(django_filters.FilterSet):
@@ -206,19 +206,13 @@ def login_view(request):
         }, SECRET_KEY, algorithm="HS256")
 
         # Create a response
-        response = Response({'detail': 'Login successful'}, status=status.HTTP_200_OK)
-
-        # Set the token as an HTTP-only cookie in the response
-        response.set_cookie('token', token, httponly=True, max_age=3600, samesite='None', secure=True, domain=SESSION_COOKIE_DOMAIN)
-
-        return response
+        return Response({'detail': 'Login successful', 'token': token}, status=status.HTTP_200_OK)
 
     return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
-@authentication_classes([CookieJWTAuthentication])
+@authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def check_auth(request):
-    print(request.user)
     return Response({'detail': 'Authenticated'}, status=status.HTTP_200_OK)
