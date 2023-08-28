@@ -189,17 +189,12 @@ def get_branch_advisory_ids(branch_name):
     logger.debug(f"Advisories: {pprint.pformat(advisories)}")
 
     if advisories:
-        jira_link_current = None
-        try:
-            jira_link_current = advisories[0][2]
-        except IndexError:
-            pass
-
-        jira_link_previous = None
-        try:
-            jira_link_previous = advisories[1][2]
-        except IndexError:
-            pass
-
-        return {advisories[0][0]: [advisories[0][1], jira_link_current], advisories[1][0]: [advisories[1][1], jira_link_previous]}
+        advisory_data = {}
+        for advisory in advisories:
+            try:
+                jira_link = advisory[2]
+            except IndexError:
+                pass
+            advisory_data[advisory[0]] = [advisory[1], jira_link]
+        return advisory_data
     return {"current": {}, "previous": {}}
