@@ -18,11 +18,21 @@ def get_advisory_data(advisory_id):
 
     try:
         errata_endpoint = os.environ["ERRATA_ADVISORY_ENDPOINT"]
-
+        jira_issues_endpoint = f"{os.environ['ERRATA_SERVER']}/advisory/{advisory_id}/jira_issues.json"
         response = requests.get(urlparse(errata_endpoint.format(advisory_id)).geturl(), verify=ssl.get_default_verify_paths().openssl_cafile, auth=HTTPSPNEGOAuth())
-        return format_advisory_data(json.loads(response.text))
-    except Exception as e:
-        print(e)
+        if response.status_code != 200:
+            return None
+        advisory_data = json.loads(response.text)
+        jira_response = requests.get(
+            urlparse(jira_issues_endpoint).geturl(),
+            verify=ssl.get_default_verify_paths().openssl_cafile,
+            auth=HTTPSPNEGOAuth()
+        )
+        jira_issues_data = json.loads(jira_response.text)
+
+        return format_advisory_data(advisory_data, jira_issues_data)
+
+    except Exception:
         return None
 
 
@@ -48,7 +58,7 @@ def format_user_data(user_data):
     return user_data
 
 
-def format_advisory_data(advisory_data):
+def format_advisory_data(advisory_data, jira_issues_data):
     """
     This method filters the data for an advisory from errata to pick required content.
     :param advisory_data: The advisory data received from errata.
@@ -56,8 +66,6 @@ def format_advisory_data(advisory_data):
     """
 
     advisory_details = []
-    bug_details = []
-    bug_summary = dict()
     final_response = {}
 
     if "errata" in advisory_data:
@@ -166,12 +174,37 @@ def format_advisory_data(advisory_data):
     final_response["advisory_details"] = advisory_details
 
     total_bugs = 0
+    jira_bugs_details = []
+    total_jira_bugs = 0
+    jira_bug_summary = dict()
+    bugzilla_bugs_details = []
+    total_bugzilla_bugs = 0
+    bugzilla_bug_summary = dict()
+
+    if jira_issues_data:
+        for jira_issue in jira_issues_data:
+            jira_bug_detail = {
+                "id_jira": jira_issue.get("id_jira"),
+                "key": jira_issue.get("key"),
+                "summary": jira_issue.get("summary"),
+                "status": jira_issue.get("status"),
+                "is_private": jira_issue.get("is_private"),
+                "labels": jira_issue.get("labels"),
+            }
+            jira_bugs_details.append(jira_bug_detail)
+            total_jira_bugs += 1
+
+            if jira_bug_detail["status"] not in jira_bug_summary:
+                jira_bug_summary[jira_bug_detail["status"]] = 0
+            jira_bug_summary[jira_bug_detail["status"]] += 1
 
     if "bugs" in advisory_data:
-        bug_data = advisory_data["bugs"]
+        bugzilla_data = advisory_data["bugs"]
 
-        if "bugs" in bug_data:
-            bug_data = bug_data["bugs"]
+        if "bugs" in advisory_data:
+            bugzilla_data = advisory_data["bugs"]
+
+            bug_data = bugzilla_data["bugs"]
 
             for each_bug in bug_data:
                 each_bug = each_bug["bug"]
@@ -179,20 +212,39 @@ def format_advisory_data(advisory_data):
                 bug["id"] = each_bug["id"]
                 bug["bug_status"] = each_bug["bug_status"]
                 bug["bug_link"] = "https://bugzilla.redhat.com/show_bug.cgi?id=" + str(each_bug["id"])
-                bug_details.append(bug)
+                bugzilla_bugs_details.append(bug)
 
-                if bug["bug_status"] not in bug_summary:
-                    bug_summary[bug["bug_status"]] = 0
+                if bug["bug_status"] not in bugzilla_bug_summary:
+                    bugzilla_bug_summary[bug["bug_status"]] = 0
 
-                bug_summary[bug["bug_status"]] += 1
-                total_bugs += 1
+                bugzilla_bug_summary[bug["bug_status"]] += 1
+                total_bugzilla_bugs += 1
 
-    final_response["bugs"] = bug_details
+    final_response["bugs"] = bugzilla_bugs_details
     bug_summary_array = []
-    for key in bug_summary:
-        bug_summary_array.append({"bug_status": key,
-                                  "count": bug_summary[key],
-                                  "percent": round((bug_summary[key] / total_bugs) * 100, 2)})
+    for key in jira_bug_summary:
+        if total_jira_bugs == 0:
+            bug_summary_array.append({
+                "bug_status": key,
+                "count": jira_bug_summary[key],
+            })
+        else:
+            bug_summary_array.append({
+                "bug_status": key,
+                "count": jira_bug_summary[key],
+            })
+
+    for key in bugzilla_bug_summary:
+        if total_bugs == 0:
+            bug_summary_array.append({
+                "bug_status": key,
+                "count": bugzilla_bug_summary[key],
+            })
+        else:
+            bug_summary_array.append({
+                "bug_status": key,
+                "count": bugzilla_bug_summary[key],
+            })
 
     final_response["bug_summary"] = bug_summary_array
 
