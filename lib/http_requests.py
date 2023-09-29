@@ -186,7 +186,6 @@ def get_branch_advisory_ids(branch_name):
         return {"current": yml_data, "previous": {}}
 
     advisories = get_advisories(branch_name)
-    logger.debug(f"Advisories: {pprint.pformat(advisories)}")
 
     if advisories:
         advisory_data = {}
