@@ -204,9 +204,9 @@ def brew_to_cdn(brew_name: str, variant_name: str) -> list:
 
     repos = []
     for item in response.json()['data']:
-        repos.append(item['relationships']['cdn_repo']['name'])
+        repos.append(item['relationships']['cdn_repo']['id'])
 
-    repos = list(set(repos))  # Getting only the unique repo names
+    repos = list(set(repos))  # Getting only the unique repo ids
 
     # Cross-check to see if the repo is mapped to the given variant
     results = []
@@ -289,17 +289,17 @@ def cdn_is_available(cdn_name: str) -> bool:
         return False
 
 
-def get_cdn_repo_details(cdn_name: str) -> dict:
+def get_cdn_repo_details(cdn_id: str) -> dict:
     """
-    Function to get the details regarding the given CDN repo.
+    Function to get the details regarding the given CDN id.
 
     :cdn_name: The name of the CDN repo
     """
-    url = f"https://errata.devel.redhat.com/api/v1/cdn_repos/{cdn_name}"
+    url = f"https://errata.devel.redhat.com/api/v1/cdn_repos/{cdn_id}"
     response = request_with_kerberos(url)
 
     if response.status_code == 404:
-        raise exceptions.CdnNotFound(f"CDN was not found for CDN name {cdn_name}")
+        raise exceptions.CdnNotFound(f"CDN was not found for CDN name {cdn_id}")
 
     return response.json()
 
