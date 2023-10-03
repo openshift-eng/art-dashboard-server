@@ -33,7 +33,7 @@ requests-kerberos==0.14.0
 s3transfer==0.6.0
 six==1.15.0
 sqlparse==0.4.4
-urllib3==1.26.5
+urllib3==1.26.17
 schedule==1.1.0
 django-filter==22.1
 ruff==0.0.270
