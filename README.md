@@ -62,12 +62,12 @@ Password is `secret` as defined in the podman run command.
 ## 4. Run container
 
 ```
-OPENSHIFT=$HOME/ART-dash    # create a workspace, clone doozer, elliot and art-dash to this location.
+OPENSHIFT=$HOME/ART-dash    # create a workspace, clone art-tools and art-dash to this location.
 
 podman run -it --rm -p 8080:8080 --net art-dashboard-network \
 -v "$OPENSHIFT/art-dashboard-server":/workspaces/art-dash:cached,z \
--v $OPENSHIFT/doozer/:/workspaces/doozer/:cached,z \
--v $OPENSHIFT/elliott/:/workspaces/elliott/:cached,z \
+-v $OPENSHIFT/art-tools/doozer/:/workspaces/doozer/:cached,z \
+-v $OPENSHIFT/art-tools/elliott/:/workspaces/elliott/:cached,z \
 -v $HOME/.ssh:/home/$USER/.ssh:ro,cached,z \
 -v $HOME/.docker/config.json:/home/$USER/.docker/config.json:ro,cached,z \
 -v $HOME/.gitconfig:/home/$USER/.gitconfig:ro,cached,z \
