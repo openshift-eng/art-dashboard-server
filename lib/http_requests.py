@@ -193,7 +193,7 @@ def get_branch_advisory_ids(branch_name):
             try:
                 jira_link = advisory[2]
             except IndexError:
-                pass
+                jira_link = None  # Assign a default value
             advisory_data[advisory[0]] = [advisory[1], jira_link]
         return advisory_data
     return {"current": {}, "previous": {}}
