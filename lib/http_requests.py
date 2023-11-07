@@ -16,7 +16,6 @@ from urllib.parse import urlparse
 HEADERS = {"Authorization": f"token {os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']}"}
 logger = logging.getLogger(__name__)
 
-
 def get_all_ocp_build_data_branches():
     """
     This function lists all the branches of the ocp-build-data repository.
@@ -112,6 +111,17 @@ def get_brew_event_id(data):
         return None
 
 
+def process_version_advisories(version, yml_data, seen):
+    # This function processes advisories for a single version
+    advisories = get_particular_advisory(yml_data[version])
+
+    if advisories:
+        jira_link = get_jira_link(yml_data[version])
+        return advisories, jira_link
+    else:
+        return None, None
+
+
 def get_advisories(branch_name):
     """
     Gets the list of advisories from the releases.yml file of an openshift release.
@@ -120,7 +130,8 @@ def get_advisories(branch_name):
                             [['4.11.6', {'extras': 102175, 'image': 102174, 'metadata': 102177, 'rpm': 102173}], ... ]
     """
     url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/releases.yml"
-    seen = {}  # variable to keep track of already processed openshift versions.
+    seen = {}
+    MAX_DEPTH = 3
     yml_data = get_http_data(url).get('releases', None)
 
     if not yml_data:
@@ -129,43 +140,36 @@ def get_advisories(branch_name):
     advisory_data = []
     for version in yml_data:
         if version in seen:
-            continue  # If we have already included the advisories of a version
+            continue
 
-        try:
-            _ = yml_data[version]['assembly']['basis']
-        except KeyError:
-            continue  # To make sure assembly and basis keys are present. Eg art3171 in 4.7 does not have those.
+        depth = 0
+        current_version = version
+        current_advisories, jira_link = process_version_advisories(current_version, yml_data, seen)
+        if not current_advisories:
+            current_advisories = {}
 
-        brew_event_id = get_brew_event_id(yml_data[version])
-
-        has_advisories = False  # flag to check if a child that inherits has advisories, in case that has precedence
-        recursion_depth = 0  # counter to prevent infinite loops
-        while not brew_event_id:
-            recursion_depth += 1
-            if recursion_depth == 1000:  # Set maximum recursion depth
+        while depth < MAX_DEPTH:
+            depth += 1
+            basis_version = yml_data[current_version].get('assembly', {}).get('basis', {}).get('assembly')
+            if not basis_version or basis_version in seen:
                 break
 
-            advisories = get_particular_advisory(yml_data[version])
-            if advisories:
-                advisory_data.append([version, advisories])
-                has_advisories = True
-                break  # exit if advisories exist even though child inherits
-            else:
-                version = yml_data[version]['assembly']['basis']['assembly']  # get the parent version number
-                brew_event_id = get_brew_event_id(yml_data[version])  # update the brew_event id
+            basis_advisories, _ = process_version_advisories(basis_version, yml_data, seen)
+            if basis_advisories:
+                current_advisories.update(basis_advisories)
+            current_version = basis_version
 
-        if version not in seen:
-            seen[version] = 1  # add version to seen as we have processed the advisories
+        # Apply override advisories specified with 'advisories!'
+        override_advisories = yml_data[version].get('assembly', {}).get('group', {}).get('advisories!', {})
+        if override_advisories:
+            current_advisories.update(override_advisories)
 
-        if has_advisories:
-            continue  # continue if inherited child has advisories, which is already processed in the while loop
-
-        advisories = get_particular_advisory(yml_data[version])
-        if advisories:
-            jira_link = get_jira_link(yml_data[version])
-            advisory_data.append([version, advisories, jira_link])
+        if current_advisories:
+            advisory_data.append([version, current_advisories, jira_link])
+        seen[version] = True
 
     return advisory_data
+
 
 
 def get_jira_link(data):
@@ -179,21 +183,21 @@ def get_jira_link(data):
 
 
 def get_branch_advisory_ids(branch_name):
+    advisory_data = {}
     if branch_name.split('-')[-1] in ["3.11", "4.5"]:  # versions which do not have releases.yml
         url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/group.yml"
         yml_data = get_http_data(url)['advisories']
+        advisory_data = {"current": yml_data, "previous": {}}
+    else:
+        advisories = get_advisories(branch_name)
+        if advisories:
+            for advisory in advisories:
+                try:
+                    jira_link = advisory[2]
+                except IndexError:
+                    jira_link = None  # Assign a default value
+                advisory_data[advisory[0]] = [advisory[1], jira_link]
+        if not advisories:  # If advisories is None or empty
+            return {"current": {}, "previous": {}}  # Return empty data structure
 
-        return {"current": yml_data, "previous": {}}
-
-    advisories = get_advisories(branch_name)
-
-    if advisories:
-        advisory_data = {}
-        for advisory in advisories:
-            try:
-                jira_link = advisory[2]
-            except IndexError:
-                jira_link = None  # Assign a default value
-            advisory_data[advisory[0]] = [advisory[1], jira_link]
-        return advisory_data
-    return {"current": {}, "previous": {}}
+    return advisory_data
