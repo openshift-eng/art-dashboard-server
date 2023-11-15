@@ -15,10 +15,10 @@ Endpoint to get the image pipeline of an image, starting from github, distgit, b
 
 Request payload:
 
-starting_from: The starting point of the pipeline. Possible values: `github` | `distgit` | `brew` | `cdn`
-| `delivery` <br>
+starting_from: The starting point of the pipeline. Possible values: `github` | `distgit` | `package` | `cdn`
+| `image` <br>
 name: Name of the package eg: `hypershift` for github, `ose-hypershift-container` for
-brew, `openshift4/ose-hypershift-rhel8` for delivery<br>
+package, `openshift4/ose-hypershift-rhel8` for image<br>
 version: Openshift version. Eg: `4.10`
 
 eg:
