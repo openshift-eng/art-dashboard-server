@@ -3,8 +3,7 @@ LABEL name="art-dash" \
   description="art-dash container image" \
   maintainer="OpenShift Automated Release Tooling (ART) Team <aos-team-art@redhat.com>"
 
-# the build will need to run inside the firewall to access internal resources.
-# install Red Hat IT Root CA and RCM repos
+# Install Red Hat IT Root CA certificates and RCM repos
 RUN curl -o /etc/pki/ca-trust/source/anchors/RH-IT-Root-CA.crt --fail -L \
     https://certs.corp.redhat.com/certs/2015-IT-Root-CA.pem \
     && curl -o /etc/pki/ca-trust/source/anchors/2022-IT-Root-CA.pem --fail -L \
@@ -24,14 +23,18 @@ RUN curl -o /etc/pki/ca-trust/source/anchors/RH-IT-Root-CA.crt --fail -L \
     mariadb-connector-c-devel openssl-devel \
  && dnf clean all
 
+# Upgrade pip and clone art-tools
+RUN pip3 install --upgrade pip \
+ && git clone https://github.com/openshift-eng/art-tools.git /art-tools \
+ && /art-tools/install.sh
+
+# Install OpenShift Client
 ARG OC_VERSION=candidate
-# include oc client
 RUN wget -O /tmp/openshift-client-linux-"$OC_VERSION".tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/ocp/"$OC_VERSION"/openshift-client-linux.tar.gz \
-  && tar -C /usr/local/bin -xzf  /tmp/openshift-client-linux-"$OC_VERSION".tar.gz oc kubectl \
+  && tar -C /usr/local/bin -xzf /tmp/openshift-client-linux-"$OC_VERSION".tar.gz oc kubectl \
   && rm /tmp/openshift-client-linux-"$OC_VERSION".tar.gz
 
-
-# Create a non-root user - see https://aka.ms/vscode-remote/containers/non-root-user.
+# Create non-root user
 ARG USERNAME=dev
 # On Linux, replace with your actual UID, GID if not the default 1000
 ARG USER_UID=1000
@@ -55,22 +58,16 @@ RUN groupadd --gid "$USER_GID" "$USERNAME" \
 USER "$USER_UID"
 WORKDIR /workspaces/art-dash
 
-USER 0
-# install dependencies (allow even openshift's random user to see)
-ENV PATH=/home/"$USERNAME"/.local/bin:/home/"$USERNAME"/bin:"$PATH"
-ENV HOME=/home/"$USERNAME"
+# Install dependencies from requirements.txt
 COPY requirements.txt ./
-RUN umask a+rx && pip3 install --upgrade \
-    "git+https://github.com/openshift-eng/art-tools.git#egg=rh-doozer&subdirectory=doozer" \
-    "git+https://github.com/openshift-eng/art-tools.git#egg=rh-elliott&subdirectory=elliott" \
-    -r ./requirements.txt
+RUN pip3 install --upgrade -r requirements.txt
 
-# install art-dash and default configs
+# Install art-dash and default configs
 COPY conf/krb5-redhat.conf /etc/krb5.conf
 COPY . /tmp/art-dash
-USER 0
 RUN cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
  && cp /tmp/art-dash/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
  && rm -rf /tmp/art-dash
+
 EXPOSE 8080
 USER "$USER_UID"
