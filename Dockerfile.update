@@ -3,27 +3,37 @@ FROM art-dash-server:base
 # This build is meant to be based on an existing build and
 # update just doozer, elliott, and art-dash.
 
-# use same non-root user from the initial install
+# Use same non-root user from the initial install
 ARG USERNAME=dev
 # On Linux, replace with your actual UID, GID if not the default 1000
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-
-COPY . .
-
+# Switch to root user for git operations
 USER 0
-# install dependencies (allow even openshift's random user to see)
-RUN umask a+rx && pip3 install --upgrade \
-    "git+https://github.com/openshift-eng/art-tools.git#egg=rh-doozer&subdirectory=doozer" \
-    "git+https://github.com/openshift-eng/art-tools.git#egg=rh-elliott&subdirectory=elliott" \
-    -r ./requirements.txt
 
-# install default configs
-RUN cp ./container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
- && cp ./container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
- && cp ./conf/krb5-redhat.conf /etc/krb5.conf
+# Update art-tools and run the install script
+RUN git clone https://github.com/openshift-eng/art-tools.git \
+    && cd art-tools \
+    && git pull \
+    && ./install.sh \
+    && cd .. \
+    && rm -rf art-tools  # Clone, update, install, and then remove art-tools
 
+# Copy the current directory content to the container
+COPY . /workspaces/art-dash-server
+
+# Install dependencies from requirements.txt
+RUN pip3 install --upgrade -r /workspaces/art-dash-server/requirements.txt
+
+# Install default configs
+RUN cp /workspaces/art-dash-server/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
+ && cp /workspaces/art-dash-server/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
+ && cp /workspaces/art-dash-server/conf/krb5-redhat.conf /etc/krb5.conf
+
+# Switch back to the non-root user and set the working directory
 USER "$USER_UID"
+WORKDIR /workspaces/art-dash-server
 
-CMD ["sh","-c","python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8080 --noreload"]
+# Start server
+CMD ["sh", "-c", "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8080 --noreload"]
