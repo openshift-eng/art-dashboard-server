@@ -22,14 +22,8 @@ RUN curl -o /etc/pki/ca-trust/source/anchors/RH-IT-Root-CA.crt --fail -L \
     # install brewkoji
     koji brewkoji \
     mariadb-connector-c-devel openssl-devel \
- && dnf clean all
-  
-# Clone art-tools and install
-RUN git clone https://github.com/openshift-eng/art-tools.git \
-    && cd art-tools \
-    && ./install.sh \
-    && cd .. \
-    && rm -rf art-tools
+ && dnf clean all \
+ && python3 -m pip install --upgrade pip
 
 # Install OpenShift Client
 ARG OC_VERSION=candidate
@@ -53,20 +47,23 @@ RUN groupadd --gid "$USER_GID" "$USERNAME" \
     && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/"$USERNAME" \
     && chmod 0440 /etc/sudoers.d/"$USERNAME"
 
-USER "$USER_UID"
 WORKDIR /workspaces/art-dash
+# Clone art-tools and install
+RUN git clone https://github.com/openshift-eng/art-tools.git \
+    && cd art-tools \
+    && ./install.sh \
+    && cd .. \
+    && rm -rf art-tools
 
 # Install dependencies from requirements.txt
 COPY requirements.txt ./
-RUN pip3 install --ignore-installed -r requirements.txt
+RUN pip3 install --upgrade -r requirements.txt
 
 # Copy art-dash source and change ownership
 USER 0
-COPY . /tmp/art-dash
-RUN chown -R "$USER_UID:$USER_GID" /tmp/art-dash
-
 # Install art-dash and default configs
 COPY conf/krb5-redhat.conf /etc/krb5.conf
+COPY . /tmp/art-dash
 RUN cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
  && cp /tmp/art-dash/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
  && rm -rf /tmp/art-dash

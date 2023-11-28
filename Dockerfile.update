@@ -9,31 +9,27 @@ ARG USERNAME=dev
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Switch to root user for git operations
-USER 0
+# Upadate pip
+RUN python3 -m pip install --upgrade pip
 
 # Update art-tools and run the install script
 RUN git clone https://github.com/openshift-eng/art-tools.git \
     && cd art-tools \
-    && git pull \
     && ./install.sh \
     && cd .. \
     && rm -rf art-tools  # Clone, update, install, and then remove art-tools
 
-# Copy the current directory content to the container
-COPY . /workspaces/art-dash-server
+COPY . .
 
-# Install dependencies from requirements.txt
-RUN pip3 install --upgrade -r /workspaces/art-dash-server/requirements.txt
+RUN pip3 install --upgrade -r requirements.txt
 
-# Install default configs
-RUN cp /workspaces/art-dash-server/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
- && cp /workspaces/art-dash-server/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
- && cp /workspaces/art-dash-server/conf/krb5-redhat.conf /etc/krb5.conf
+USER 0
+# install default configs
+RUN cp ./container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
+ && cp ./container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
+ && cp ./conf/krb5-redhat.conf /etc/krb5.conf
 
-# Switch back to the non-root user and set the working directory
 USER "$USER_UID"
-WORKDIR /workspaces/art-dash-server
 
 # Start server
 CMD ["sh", "-c", "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8080 --noreload"]
