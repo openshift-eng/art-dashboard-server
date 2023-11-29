@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 HEADERS = {"Authorization": f"token {os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']}"}
 logger = logging.getLogger(__name__)
 
+
 def get_all_ocp_build_data_branches():
     """
     This function lists all the branches of the ocp-build-data repository.
@@ -169,7 +170,6 @@ def get_advisories(branch_name):
         seen[version] = True
 
     return advisory_data
-
 
 
 def get_jira_link(data):
