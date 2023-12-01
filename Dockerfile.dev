@@ -20,17 +20,16 @@ RUN cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/do
 # Switching back to default user
 USER "$USER_UID"
 
-WORKDIR /workspaces
+WORKDIR /workspaces/art-dash
 # Upadate pip
 RUN python3 -m pip install --upgrade pip
 COPY requirements.txt ./
-RUN pip3 install --upgrade -r requirements.txt
+RUN pip3 install --upgrade -r requirements.txt \
+    && rm requirements.txt  # We need to manually remove since we copied using COPY
 
-# Update art-tools and run the install script
+# Clone art-tools and install
 RUN cd art-tools \
     && git pull \
     && ./install.sh
-
-WORKDIR /workspaces/art-dash
 
 COPY . .

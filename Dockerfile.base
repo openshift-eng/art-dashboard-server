@@ -53,25 +53,21 @@ ENV PATH /home/"$USERNAME"/.local/bin:"$PATH"
 
 # Install art-dash and default configs
 COPY conf/krb5-redhat.conf /etc/krb5.conf
-COPY . /tmp/art-dash
-RUN cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
- && cp /tmp/art-dash/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
- && rm -rf /tmp/art-dash
 
-# Only /workspaces has permissions for default user
-WORKDIR /workspaces
+COPY container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml
+COPY container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml
+
+WORKDIR /workspaces/art-dash
 
 USER "$USER_UID"
 # Clone art-tools and install
 RUN git clone https://github.com/openshift-eng/art-tools.git \
     && cd art-tools \
-    && ./install.sh \
-    && cd .. \
-    && rm -rf art-tools
+    && ./install.sh
 
 # Install dependencies from requirements.txt
 COPY requirements.txt ./
-RUN pip3 install --upgrade -r requirements.txt
+RUN pip3 install --upgrade -r requirements.txt \
+    && rm requirements.txt  # We need to manually remove since we copied using COPY
 
-WORKDIR /workspaces/art-dash
 EXPOSE 8080
