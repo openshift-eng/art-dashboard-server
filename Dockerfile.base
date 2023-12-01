@@ -47,7 +47,21 @@ RUN groupadd --gid "$USER_GID" "$USERNAME" \
     && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/"$USERNAME" \
     && chmod 0440 /etc/sudoers.d/"$USERNAME"
 
-WORKDIR /workspaces/art-dash
+# Setting HOME to dev user's and adding their bin to PATH
+ENV HOME /home/"$USERNAME"
+ENV PATH /home/"$USERNAME"/.local/bin:"$PATH"
+
+# Install art-dash and default configs
+COPY conf/krb5-redhat.conf /etc/krb5.conf
+COPY . /tmp/art-dash
+RUN cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
+ && cp /tmp/art-dash/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
+ && rm -rf /tmp/art-dash
+
+# Only /workspaces has permissions for default user
+WORKDIR /workspaces
+
+USER "$USER_UID"
 # Clone art-tools and install
 RUN git clone https://github.com/openshift-eng/art-tools.git \
     && cd art-tools \
@@ -59,14 +73,5 @@ RUN git clone https://github.com/openshift-eng/art-tools.git \
 COPY requirements.txt ./
 RUN pip3 install --upgrade -r requirements.txt
 
-# Copy art-dash source and change ownership
-USER 0
-# Install art-dash and default configs
-COPY conf/krb5-redhat.conf /etc/krb5.conf
-COPY . /tmp/art-dash
-RUN cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
- && cp /tmp/art-dash/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
- && rm -rf /tmp/art-dash
-
+WORKDIR /workspaces/art-dash
 EXPOSE 8080
-USER "$USER_UID"
