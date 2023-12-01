@@ -12,10 +12,8 @@ ARG USER_GID=$USER_UID
 # Since art-dash-server:base is set as dev user, we need to switch back to root
 USER 0
 # install default configs
-COPY . /tmp/art-dash
-RUN cp /tmp/art-dash/container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
- && cp /tmp/art-dash/container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
- && rm -rf /tmp/art-dash
+COPY container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml
+COPY container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml
 
 # Switching back to default user
 USER "$USER_UID"
