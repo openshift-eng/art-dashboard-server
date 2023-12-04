@@ -3,27 +3,31 @@ FROM art-dash-server:base
 # This build is meant to be based on an existing build and
 # update just doozer, elliott, and art-dash.
 
-# use same non-root user from the initial install
+# Use same non-root user from the initial install
 ARG USERNAME=dev
 # On Linux, replace with your actual UID, GID if not the default 1000
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
+# Since art-dash-server:base is set as dev user, we need to switch back to root
+USER 0
+# install default configs
+COPY container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml
+COPY container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml
+
+# Switching back to default user
+USER "$USER_UID"
+
+WORKDIR /workspaces/art-dash
+# Upadate pip
+RUN python3 -m pip install --upgrade pip
+COPY requirements.txt ./
+RUN pip3 install --upgrade -r requirements.txt \
+    && rm requirements.txt  # We need to manually remove since we copied using COPY
+
+# Clone art-tools and install
+RUN cd art-tools \
+    && git pull \
+    && ./install.sh
 
 COPY . .
-
-# Switch to root user for git operations
-USER 0
-# Clone art-tools and run install.sh script
-RUN git clone https://github.com/openshift-eng/art-tools.git \
-    && cd art-tools \
-    && ./install.sh \
-    && cd .. \
-    && rm -rf art-tools
-
-# install default configs
-RUN cp ./container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml \
- && cp ./container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml \
- && cp ./conf/krb5-redhat.conf /etc/krb5.conf
-
-USER "$USER_UID"
