@@ -20,10 +20,18 @@ from build_interface.settings import SECRET_KEY, SESSION_COOKIE_DOMAIN, JWTAuthe
 
 
 class BuildDataFilter(django_filters.FilterSet):
+    stream_only = django_filters.BooleanFilter(method='filter_stream_only')
+
+    def filter_stream_only(self, queryset, name, value):
+        if value:
+            return queryset.filter(build_0_nvr__endswith='.assembly.stream')
+        return queryset
+
     class Meta:
         model = Build
         fields = {
             "build_0_id": ["icontains", "exact"],
+            "build_0_nvr": ["icontains", "exact"],
             "dg_name": ["icontains", "exact"],
             "brew_task_state": ["exact"],
             "brew_task_id": ["icontains", "exact"],
