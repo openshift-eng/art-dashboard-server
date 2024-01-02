@@ -17,7 +17,7 @@ podman build -f Dockerfile.update -t art-dash-server:latest --build-arg USERNAME
 ```
 or you can get the build from [cluster](https://console-openshift-console.apps.artc2023.pc3z.p1.openshiftapps.com/k8s/ns/art-dashboard-server/imagestreams/art-dash-server)
 ```
-# after you login to cluster on CLI
+# after you log in to the cluster on CLI
 oc registry login
 # pull image
 podman pull default-route-openshift-image-registry.apps.artc2023.pc3z.p1.openshiftapps.com/art-dashboard-server/art-dash-server
@@ -30,31 +30,43 @@ podman network create art-dashboard-network
 
 ## 3. Setup local database
 
-
-Start local DB server
+Start the local DB server using a specific version of MariaDB (10.6.14), as the latest version doesn't include MySQL.
 ```
-podman run --net art-dashboard-network --name mariadb -e MARIADB_ROOT_PASSWORD=secret -e MARIADB_DATABASE=doozer_build -d docker.io/library/mariadb:latest
+podman run --net art-dashboard-network --name mariadb -e MARIADB_ROOT_PASSWORD=secret -e MARIADB_DATABASE=doozer_build -d docker.io/library/mariadb:10.6.14
 ```
 
 Download the test database as `test.sql`. 
 ```
-# after login to cluster on CLI
-
-# switch to art-db project
+# Log in to OpenShift CLI and switch to the art-db project
+oc login
 oc project art-db
 
-# get the running db pod
-$ oc get pods
-NAME              READY   STATUS    RESTARTS   AGE
-mariadb-1-nwsrp   1/1     Running   0          6d6h
+# Get the running DB pod
+oc get pods
 
-# download the database
-oc exec mariadb-1-nwsrp -it -- mysqldump -uroot --all-databases > test.sql
+# Enter the pod
+oc exec -it <pod-name> -- /bin/bash
+
+# Inside the pod, dump the 'art_dash' database into a file named test.sql
+mysqldump -uroot art_dash > test.sql
+
+# Exit the pod
+exit
+
+# Sync the dumped file from the pod to your local machine
+oc rsync <pod-name>:/opt/app-root/src/test.sql /path/to/art-dashboard-server
 ```
+
 Import db into the mariadb container
 ```
-docker cp test.sql mariadb:.
-docker exec -ti mariadb mysql -uroot -p < test.sql
+podman cp test.sql mariadb:/test.sql
+podman exec -ti mariadb /bin/bash
+
+# Inside the container
+mysql -uroot -psecret
+CREATE DATABASE art_dash;
+exit
+mysql -uroot -psecret art_dash < test.sql
 ```
 Password is `secret` as defined in the podman run command.
 
@@ -76,7 +88,7 @@ podman run -it --rm -p 8080:8080 --net art-dashboard-network \
     art-dash-server:latest
 ```
 
-## 5. Test it works
+## 5. Test if it works
 ```
 $curl -i 'http://localhost:8080/api/v1/test'
 HTTP/1.1 200 OK
