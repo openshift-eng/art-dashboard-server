@@ -125,8 +125,9 @@ def process_version_advisories(version, yml_data, seen):
 
 def get_advisories(branch_name):
     """
-    Gets the list of advisories from the releases.yml file of an openshift release.
-    :param branch_name: Openshift branch name in ocp-build-data. eg: openshift-4.10
+    Gets the list of advisories from the releases.yml file of an OpenShift release.
+    Filters out releases with 'custom' assembly type.
+    :param branch_name: OpenShift branch name in ocp-build-data. eg: openshift-4.10
     :returns: List of lists containing the advisories with the z-stream version. Eg:
                             [['4.11.6', {'extras': 102175, 'image': 102174, 'metadata': 102177, 'rpm': 102173}], ... ]
     """
@@ -141,6 +142,13 @@ def get_advisories(branch_name):
     advisory_data = []
     for version in yml_data:
         if version in seen:
+            continue
+
+        assembly_data = yml_data[version].get('assembly', {})
+        assembly_type = assembly_data.get('type', '').lower()
+
+        # Skip 'custom' assembly types
+        if assembly_type == 'custom':
             continue
 
         depth = 0
