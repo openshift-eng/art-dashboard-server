@@ -126,7 +126,7 @@ def process_version_advisories(version, yml_data, seen):
 def get_advisories(branch_name):
     """
     Gets the list of advisories from the releases.yml file of an OpenShift release.
-    Filters out releases with 'custom' assembly type.
+    Filters out releases with 'custom' assembly type or empty advisories.
     :param branch_name: OpenShift branch name in ocp-build-data. eg: openshift-4.10
     :returns: List of lists containing the advisories with the z-stream version. Eg:
                             [['4.11.6', {'extras': 102175, 'image': 102174, 'metadata': 102177, 'rpm': 102173}], ... ]
@@ -163,15 +163,20 @@ def get_advisories(branch_name):
             if not basis_version or basis_version in seen:
                 break
 
+            # Check for 'advisories!' override in basis version
+            basis_override_advisories = yml_data[basis_version].get('assembly', {}).get('group', {}).get('advisories!', None)
+            if basis_override_advisories is not None:
+                if not basis_override_advisories:  # If basis versions override_advisories is empty
+                    current_advisories.clear()
+                    break  # No need to process further, the advisories are cleared
+                else:
+                    current_advisories.update(basis_override_advisories)
+                    break  # To prevent further basis version processing
+
             basis_advisories, _ = process_version_advisories(basis_version, yml_data, seen)
             if basis_advisories:
                 current_advisories.update(basis_advisories)
             current_version = basis_version
-
-        # Apply override advisories specified with 'advisories!'
-        override_advisories = yml_data[version].get('assembly', {}).get('group', {}).get('advisories!', {})
-        if override_advisories:
-            current_advisories.update(override_advisories)
 
         if current_advisories:
             advisory_data.append([version, current_advisories, jira_link])
