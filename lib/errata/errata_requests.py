@@ -9,6 +9,7 @@ import ssl
 
 PP_SERVER = "https://pp.engineering.redhat.com/api/v7/releases"
 
+
 @update_keytab
 def get_advisory_data(advisory_id):
     """

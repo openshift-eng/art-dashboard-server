@@ -7,12 +7,14 @@ from slack_sdk import WebClient
 slack_token = os.environ.get('SLACK_TOKEN', None)
 API_ENDPOINT = "https://art-dash-server-art-dashboard-server.apps.artc2023.pc3z.p1.openshiftapps.com/api/v1"
 
+
 def post_slack_message(message: str, thread_ts: Optional[str] = None,):
     response = WebClient(token=slack_token).chat_postMessage(
                 channel="#forum-ocp-release",
                 text=message,
                 thread_ts=thread_ts, username="art-release-bot", link_names=True, attachments=[], icon_emoji=":dancing_robot:", reply_broadcast=False)
     return response
+
 
 release_status = requests.get(f"{API_ENDPOINT}/release_status").json()
 if release_status['alert'] != []:
