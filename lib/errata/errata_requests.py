@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from requests_gssapi import HTTPSPNEGOAuth
 import ssl
 
+PP_SERVER = "https://pp.engineering.redhat.com/api/v7/releases"
 
 @update_keytab
 def get_advisory_data(advisory_id):
@@ -52,6 +53,41 @@ def get_user_data(user_id):
     except Exception as e:
         print(e)
         return None
+
+
+def catch_request_result(url):
+    try:
+        print(url)
+        response = requests.get(url, verify=ssl.get_default_verify_paths().openssl_cafile, auth=HTTPSPNEGOAuth(), headers={'Content-Type': 'application/json'})
+        return json.loads(response.text)
+    except Exception as e:
+        print(e)
+        raise e
+
+
+@update_keytab
+def get_advisory_status_activities(advisory_id):
+    """
+    This method returns advisory activities for a given id.
+    :param advisory_id: The id of the advisory to get data for.
+    :return: Dict, advisory data.
+    """
+    return catch_request_result(f"https://errata.devel.redhat.com/api/v1/erratum/{advisory_id}/activities?filter[what]=status")
+
+
+@update_keytab
+def get_advisory_schedule(branch_version):
+    return catch_request_result(f"{PP_SERVER}/openshift-{branch_version}.z/?fields=all_ga_tasks")
+
+
+@update_keytab
+def get_feature_freeze_schedule(branch_version):
+    return catch_request_result(f"{PP_SERVER}/openshift-{branch_version}/schedule-tasks/?name__regex=Feature+Development+for")
+
+
+@update_keytab
+def get_ga_schedule(branch_version):
+    return catch_request_result(f"{PP_SERVER}/openshift-{branch_version}/schedule-tasks/?name=OpenShift+Container+Platform+GA+Release+Schedule")
 
 
 def format_user_data(user_data):
