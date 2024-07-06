@@ -33,3 +33,4 @@ django-filter==22.1
 ruff==0.0.270
 pre-commit==3.3.2
 setuptools==65.5.1
+requests>=2.32.0 # not directly required, pinned by Snyk to avoid a vulnerability
