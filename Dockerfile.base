@@ -60,6 +60,11 @@ COPY container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.
 WORKDIR /workspaces/art-dash
 
 USER "$USER_UID"
+
+#Setup uv package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/home/$USERNAME/.local" sh \
+    && uv venv --python 3.11 ../.venv
+
 # Clone art-tools and install
 RUN git clone https://github.com/openshift-eng/art-tools.git \
     && cd art-tools \
@@ -67,7 +72,7 @@ RUN git clone https://github.com/openshift-eng/art-tools.git \
 
 # Install dependencies from requirements.txt
 COPY requirements.txt ./
-RUN pip3 install --upgrade -r requirements.txt \
+RUN uv pip install --upgrade -r requirements.txt \
     && rm requirements.txt
 
 EXPOSE 8080

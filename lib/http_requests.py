@@ -115,12 +115,8 @@ def get_brew_event_id(data):
 def process_version_advisories(version, yml_data, seen):
     # This function processes advisories for a single version
     advisories = get_particular_advisory(yml_data[version])
-
-    if advisories:
-        jira_link = get_jira_link(yml_data[version])
-        return advisories, jira_link
-    else:
-        return None, None
+    jira_link = get_jira_link(yml_data[version])
+    return advisories, jira_link
 
 
 def get_advisories(branch_name):
@@ -154,6 +150,13 @@ def get_advisories(branch_name):
         depth = 0
         current_version = version
         current_advisories, jira_link = process_version_advisories(current_version, yml_data, seen)
+        override_advisories = assembly_data.get('group', {}).get('advisories!', {})
+
+        if override_advisories:
+            advisory_data.append([version, override_advisories, jira_link])
+            seen[version] = True
+            continue # This release contains advisories!, no need to process further
+
         if not current_advisories:
             current_advisories = {}
 
@@ -166,16 +169,14 @@ def get_advisories(branch_name):
             # Check for 'advisories!' override in basis version
             basis_override_advisories = yml_data[basis_version].get('assembly', {}).get('group', {}).get('advisories!', None)
             if basis_override_advisories is not None:
-                if not basis_override_advisories:  # If basis versions override_advisories is empty
-                    current_advisories.clear()
-                    break  # No need to process further, the advisories are cleared
-                else:
-                    current_advisories.update(basis_override_advisories)
-                    break  # To prevent further basis version processing
+                # Layer current_advisories over basis_override_advisories
+                current_advisories ={**basis_override_advisories, **current_advisories}
+                break # To prevent further basis version processing
 
             basis_advisories, _ = process_version_advisories(basis_version, yml_data, seen)
             if basis_advisories:
-                current_advisories.update(basis_advisories)
+                # Layer current_advisories over basis_advisories
+                current_advisories = {**basis_advisories, **current_advisories}
             current_version = basis_version
 
         if current_advisories:

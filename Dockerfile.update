@@ -19,10 +19,12 @@ COPY container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.
 USER "$USER_UID"
 
 WORKDIR /workspaces/art-dash
-# Upadate pip
-RUN python3 -m pip install --upgrade pip
+
+# Update uv
+RUN uv self update
+
 COPY requirements.txt ./
-RUN pip3 install --upgrade -r requirements.txt \
+RUN uv pip install --upgrade -r requirements.txt \
     && rm requirements.txt  # We need to manually remove since we copied using COPY
 
 # Clone art-tools and install
@@ -33,4 +35,4 @@ RUN cd art-tools \
 COPY . .
 
 # Start server
-CMD ["sh", "-c", "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8080 --noreload"]
+CMD ["sh", "-c", "source ../.venv/bin/activate && python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8080 --noreload"]
