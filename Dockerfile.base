@@ -63,7 +63,7 @@ USER "$USER_UID"
 # Clone art-tools and install
 RUN git clone https://github.com/openshift-eng/art-tools.git \
     && cd art-tools \
-    && ./install.sh
+    && pip3 install -e artcommon/ -e doozer/ -e elliott/ -e pyartcd/ -e ocp-build-data-validator/
 
 # Install dependencies from requirements.txt
 COPY requirements.txt ./
