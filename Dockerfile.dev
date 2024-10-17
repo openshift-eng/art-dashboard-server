@@ -28,6 +28,6 @@ RUN pip3 install --upgrade -r requirements.txt \
 # Clone art-tools and install
 RUN cd art-tools \
     && git pull \
-    && ./install.sh
+    && pip3 install -e artcommon/ -e doozer/ -e elliott/ -e pyartcd/ -e ocp-build-data-validator/
 
 COPY . .
