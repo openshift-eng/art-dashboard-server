@@ -4,9 +4,9 @@ botocore==1.29.104
 cachetools==5.2.0
 cffi==1.15.1
 chardet==3.0.4
-cryptography==42.0.6
+cryptography==43.0.1
 decorator==4.4.2
-Django==4.1.13
+Django==4.2.16
 django-cors-headers==3.13.0
 django-extensions==3.2.1
 djangorestframework==3.13.1
