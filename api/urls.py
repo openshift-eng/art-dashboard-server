@@ -13,5 +13,8 @@ urlpatterns = [
     re_path('test', views.test),
     re_path('rpms_images_fetcher', views.rpms_images_fetcher_view),
     re_path('login', views.login_view, name='login'),
-    re_path('check_auth', views.check_auth, name='check_auth')
+    re_path('check_auth', views.check_auth, name='check_auth'),
+    re_path('advisory_activites', views.get_advisory_activities, name='advisory_activities'),
+    re_path('release_schedule', views.get_release_schedule, name='release_schedule'),
+    re_path('release_status', views.get_release_status, name='release_status')
 ]
