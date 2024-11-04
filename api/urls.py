@@ -11,6 +11,7 @@ urlpatterns = [
     re_path('ga-version', views.ga_version),
     re_path('branch/', views.branch_data, name='branch_data_view'),
     re_path('test', views.test),
+    re_path('git_jira_api', views.git_jira_api),
     re_path('rpms_images_fetcher', views.rpms_images_fetcher_view),
     re_path('login', views.login_view, name='login'),
     re_path('check_auth', views.check_auth, name='check_auth')
