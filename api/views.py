@@ -231,8 +231,12 @@ def git_jira_api(request):
     if not jira_test_mode_value or 'true' in jira_test_mode_value.lower():
         jira_test_mode = True
 
-    # FIXME: This is a temporary setting during development; it will eventually be openshift-eng
-    git_user = "DennisPeriquet"
+    git_user = os.getenv("GIT_USER")
+    if not git_user:
+        return Response({
+            "status": "failure",
+            "error": "git user not in GIT_USER environment variable"
+        }, status=500)
 
     if git_test_mode:
         # Just create a success status and fake PR without using the git API
