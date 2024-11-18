@@ -15,10 +15,22 @@ USER 0
 COPY container/doozer-settings.yaml /home/"$USERNAME"/.config/doozer/settings.yaml
 COPY container/elliott-settings.yaml /home/"$USERNAME"/.config/elliott/settings.yaml
 
+# If you want to run with an ssh server (for debugging in vscode), uncomment these four lines
+# RUN dnf install -y openssh-server && \
+#     ssh-keygen -A && \
+#     sed -i 's/#Port 22/Port 22/' /etc/ssh/sshd_config && \
+#     sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+
 # Switching back to default user
 USER "$USER_UID"
 
 WORKDIR /workspaces/art-dash
+
+# If you want to run with an ssh server (for debugging in vscode), uncomment these three lines after adding a the launch.json
+# RUN mkdir .vscode
+# RUN sudo chmod a+rw .vscode
+# COPY launch.json .vscode
+
 # Upadate pip
 RUN python3 -m pip install --upgrade pip
 COPY requirements.txt ./
