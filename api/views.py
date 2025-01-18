@@ -196,6 +196,8 @@ def git_jira_api(request):
     jira_story_type_id = request.query_params.get('jira_story_type_id', None)
     jira_component = request.query_params.get('jira_component', None)
     jira_priority = request.query_params.get('jira_priority', None)
+    image_type = request.query_params.get('image_type', None)
+    payload_name = request.query_params.get('payload_name', None)
 
     git_test_mode_value = request.query_params.get('git_test_mode', None)
     jira_test_mode_value = request.query_params.get('jira_test_mode', None)
@@ -203,7 +205,12 @@ def git_jira_api(request):
     # extract the host from the request.
     host = request.get_host()
 
-    if not all([file_content, release_for_image, image_name, jira_summary, jira_description, jira_project_id, jira_story_type_id, jira_component, jira_priority]):
+    if image_type == 'other':
+        # This is not needed when the image type is not for payload so make
+        # payload something other than None so it can be treated as supplied.
+        payload_name = 'Not needed'
+
+    if not all([file_content, release_for_image, image_name, jira_summary, jira_description, jira_project_id, jira_story_type_id, jira_component, jira_priority, image_type, payload_name]):
         # These are all required. If any are missing, return an error and
         # list what the user passed in.
         return Response({
@@ -218,7 +225,9 @@ def git_jira_api(request):
                 "jira_project_id": jira_project_id,
                 "jira_story_type_id": jira_story_type_id,
                 "jira_component": jira_component,
-                "jira_priority": jira_priority
+                "jira_priority": jira_priority,
+                "image_type": image_type,
+                "payload_name": payload_name,
             }
         }, status=400)
 
@@ -404,13 +413,70 @@ def git_jira_api(request):
         try:
             # Attempt to create the Jira
             new_jira = jira.create_issue(fields=jira_data)
+
+            jiraID = new_jira.key
+
+            def add_subtask(jira_key: str, subtask_data: dict, assignee: str) -> None:
+                subtask_data = {
+                    "project": {"key": "ART"},
+                    "issuetype": {"name": "Sub-task"},
+                    "parent": {"key": jira_key},
+                    "summary": subtask_data["summary"],
+                    "description": subtask_data["description"],
+                }
+                if assignee:
+                    subtask_data["assignee"] = {"name": assignee}
+                try:
+                    _ = jira.create_issue(fields=subtask_data)
+                except Exception as e:
+                    print(f"Error creating subtask on {jira_key}: {str(e)}; subtask_data: {subtask_data}")
+
+            # For all images, add these subtasks:
+            jira_subtask_data = {
+                "summary": "pre-flight: Is under branching management",
+                "description": "Confirm that the repository has release branches set up"
+            }
+            add_subtask(jiraID, jira_subtask_data, "")
+
+            jira_subtask_data = {
+                "summary": "pre-flight: Has openshift-priv set up",
+                "description": "Confirm that the repo exists in openshift-priv"
+            }
+            add_subtask(jiraID, jira_subtask_data, "")
+
+            jira_subtask_data = {
+                "summary": "pre-merge: Add the image as a component in openshift/org repo",
+                "description": "This is a new image and. As such, add it as a Backstage component in https://gitlab.cee.redhat.com/openshift/org"
+            }
+            add_subtask(jiraID, jira_subtask_data, "")
+
+            jira_subtask_data = {
+                "summary": "pre-merge: Is in ocp-build-data:main/product.yml",
+                "description": "Confirm that the repo exists in ocp-build-data:main/product.yml"
+            }
+            add_subtask(jiraID, jira_subtask_data, "")
+
+            # For payload images, add this subtasks:
+            if image_type == "cvo-payload":
+                jira_subtask_data = {
+                    "summary": "pre-flight: Has staff engineer approval",
+                    "description": f"Staff Engineer has approved for image {image_name} to be included in the payload as {payload_name} starting with version {release_for_image}."
+                }
+                add_subtask(jiraID, jira_subtask_data, "jdelft")
+
+            # For new OLM managed operators, add these subtasks:
+            if image_type == "olm-managed":
+                jira_subtask_data = {
+                    "summary": "pre-flight: Has PM approval",
+                    "description": f"Confirm that there is PM approval to add {image_name} to {release_for_image}"
+                }
+                add_subtask(jiraID, jira_subtask_data, "")
+
         except Exception as e:
             return Response({
                 "status": "failure",
                 "error": f"An error occurred while creating the jira: {str(e)}; jira_data: {jira_data}"
             }, status=400)
-
-        jiraID = new_jira.key
 
         try:
             # Now that we have a Jira, attempt to patch the PR title with the JiraID
