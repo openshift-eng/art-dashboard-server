@@ -1,8 +1,7 @@
 """
 This module has helper functions to make http requests to other apis.
 """
-import pprint
-
+import copy
 import requests
 import ocp_build_data.constants as app_constants
 import lib.constants as constants
@@ -111,16 +110,95 @@ def get_brew_event_id(data):
     except KeyError:
         return None
 
+# assembly merger methods start #
+# The following methods have been copied over from
+# github.com/openshift-eng/art-tools/artcommon/artcommonlib/assembly.py
+# to work with assemblies. Please refer before changing
 
-def process_version_advisories(version, yml_data, seen):
-    # This function processes advisories for a single version
-    advisories = get_particular_advisory(yml_data[version])
 
-    if advisories:
-        jira_link = get_jira_link(yml_data[version])
-        return advisories, jira_link
-    else:
-        return None, None
+def _check_recursion(releases_config: dict, assembly: str):
+    found = []
+    next_assembly = assembly
+    while next_assembly:
+        if next_assembly in found:
+            raise ValueError(f'Infinite recursion in {assembly} detected; {next_assembly} detected twice in chain')
+        found.append(next_assembly)
+        target_assembly = releases_config.get('releases', {}).get(next_assembly, {}).get('assembly', {})
+        next_assembly = target_assembly.get('basis', {}).get('assembly', None)
+
+
+def _assembly_field(field_name: str, releases_config: dict, assembly: str) -> dict:
+    """
+    :param field_name: the field name
+    :param releases_config: The content of releases.yml in Model form.
+    :param assembly: The name of the assembly to assess
+    Returns the computed field for a given assembly.
+    """
+    _check_recursion(releases_config, assembly)
+    target_assembly = releases_config.get('releases', {}).get(assembly, {}).get("assembly", {})
+    current_assembly_field = target_assembly.get(field_name, {})
+    basis_assembly = target_assembly.get("basis", {}).get("assembly", None)
+    if basis_assembly:  # Does this assembly inherit from another?
+        # Recursive apply ancestor assemblies
+        basis_assembly_field = _assembly_field(field_name, releases_config, basis_assembly)
+        current_assembly_field = _merger(current_assembly_field, basis_assembly_field)
+    return current_assembly_field
+
+
+def _merger(a, b):
+    """
+    Merges two, potentially deep, objects into a new one and returns the result.
+    Conceptually, 'a' is layered over 'b' and is dominant when
+    necessary. The output is 'c'.
+    1. if 'a' specifies a primitive value, regardless of depth, 'c' will contain that value.
+    2. if a key in 'a' specifies a list and 'b' has the same key/list, a's list will be appended to b's for c's list.
+       Duplicates entries will be removed and primitive (str, int, ...) lists will be returned in sorted order.
+    3. if a key ending with '!' in 'a' specifies a value, c's key (sans !) will be to set that value exactly.
+    4. if a key ending with a '?' in 'a' specifies a value, c's key (sans ?)
+       will be set to that value IF 'c' does not contain the key.
+    4. if a key ending with a '-' in 'a' specifies a value, c's will not be populated
+       with the key (sans -) regardless of 'a' or  'b's key value.
+    """
+    if type(a) in [bool, int, float, str, bytes, type(None)]:
+        return a
+
+    c = copy.deepcopy(b)
+
+    if type(a) is list:
+        if type(c) is not list:
+            return a
+        for entry in a:
+            if entry not in c:  # do not include duplicates
+                c.append(entry)
+
+        if c and type(c[0]) in [str, int, float]:
+            return sorted(c)
+        return c
+
+    if type(a) is dict:
+        if type(c) is not dict:
+            return a
+        for k, v in a.items():
+            if k.endswith('!'):  # full dominant key
+                k = k[:-1]
+                c[k] = v
+            elif k.endswith('?'):  # default value key
+                k = k[:-1]
+                if k not in c:
+                    c[k] = v
+            elif k.endswith('-'):  # remove key entirely
+                k = k[:-1]
+                c.pop(k, None)
+            else:
+                if k in c:
+                    c[k] = _merger(a[k], c[k])
+                else:
+                    c[k] = a[k]
+        return c
+
+    raise TypeError(f'Unexpected value type: {type(a)}: {a}')
+
+# assembly merger methods end #
 
 
 def get_advisories(branch_name):
@@ -132,67 +210,25 @@ def get_advisories(branch_name):
                             [['4.11.6', {'extras': 102175, 'image': 102174, 'metadata': 102177, 'rpm': 102173}], ... ]
     """
     url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/releases.yml"
-    seen = {}
-    MAX_DEPTH = 3
-    yml_data = get_http_data(url).get('releases', None)
+    yml_data = get_http_data(url)
 
     if not yml_data:
         return None
 
     advisory_data = []
-    for version in yml_data:
-        if version in seen:
-            continue
-
-        assembly_data = yml_data[version].get('assembly', {})
+    for version in yml_data.get("releases", {}):
+        assembly_data = yml_data["releases"][version].get('assembly', {})
         assembly_type = assembly_data.get('type', '').lower()
 
         # Skip 'custom' assembly types
         if assembly_type == 'custom':
             continue
-
-        depth = 0
-        current_version = version
-        current_advisories, jira_link = process_version_advisories(current_version, yml_data, seen)
-        if not current_advisories:
-            current_advisories = {}
-
-        while depth < MAX_DEPTH:
-            depth += 1
-            basis_version = yml_data[current_version].get('assembly', {}).get('basis', {}).get('assembly')
-            if not basis_version or basis_version in seen:
-                break
-
-            # Check for 'advisories!' override in basis version
-            basis_override_advisories = yml_data[basis_version].get('assembly', {}).get('group', {}).get('advisories!', None)
-            if basis_override_advisories is not None:
-                if not basis_override_advisories:  # If basis versions override_advisories is empty
-                    current_advisories.clear()
-                    break  # No need to process further, the advisories are cleared
-                else:
-                    current_advisories.update(basis_override_advisories)
-                    break  # To prevent further basis version processing
-
-            basis_advisories, _ = process_version_advisories(basis_version, yml_data, seen)
-            if basis_advisories:
-                current_advisories.update(basis_advisories)
-            current_version = basis_version
-
-        if current_advisories:
-            advisory_data.append([version, current_advisories, jira_link])
-        seen[version] = True
+        group_data = _assembly_field("group", yml_data, version)
+        advisories = group_data.get("advisories", {})
+        jira_link = group_data.get("release_jira", "")
+        advisory_data.append([version, advisories, jira_link])
 
     return advisory_data
-
-
-def get_jira_link(data):
-    try:
-        jira_link = data['assembly']['group']['release_jira']
-        logger.debug(f"JIRA: {jira_link}")
-        return jira_link
-    except KeyError:
-        logger.error("Could not find jira link")
-        return None
 
 
 def get_branch_advisory_ids(branch_name):
