@@ -110,10 +110,11 @@ def get_brew_event_id(data):
     except KeyError:
         return None
 
-#### assembly merger methods ####
+# assembly merger methods start #
 # The following methods have been copied over from
 # github.com/openshift-eng/art-tools/artcommon/artcommonlib/assembly.py
 # to work with assemblies. Please refer before changing
+
 
 def _check_recursion(releases_config: dict, assembly: str):
     found = []
@@ -197,7 +198,8 @@ def _merger(a, b):
 
     raise TypeError(f'Unexpected value type: {type(a)}: {a}')
 
-#### assembly merger methods end ####
+# assembly merger methods end #
+
 
 def get_advisories(branch_name):
     """
@@ -208,8 +210,6 @@ def get_advisories(branch_name):
                             [['4.11.6', {'extras': 102175, 'image': 102174, 'metadata': 102177, 'rpm': 102173}], ... ]
     """
     url = f"{os.environ['GITHUB_RAW_CONTENT_URL']}/{branch_name}/releases.yml"
-    seen = {}
-    MAX_DEPTH = 3
     yml_data = get_http_data(url)
 
     if not yml_data:
