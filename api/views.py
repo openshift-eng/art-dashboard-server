@@ -381,10 +381,10 @@ def git_jira_api(request):
 
         try:
             # Attempt to connect to Jira
-            headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
-            headers["Authorization"] = f"Bearer {jira_api_token}"
-
-            jira = JIRA(server='https://issues.redhat.com/', options={"headers": headers})
+            jira = JIRA(
+                server='https://redhat.atlassian.net/',
+                basic_auth=(jira_email, jira_api_token)
+            )
 
             # Test the connection by retrieving something basic (the user's profile).
             user = jira.current_user()

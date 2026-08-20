@@ -12,6 +12,7 @@ django-extensions==3.2.1
 djangorestframework==3.13.1
 docutils==0.19
 environ==1.0
+fastcore==1.5.29
 ghapi==1.0.3
 jmespath==1.0.1
 jsonpath-rw==1.4.0

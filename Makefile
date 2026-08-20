@@ -101,6 +101,8 @@ run-dev:
 		-v $(OPENSHIFT_DEV_DIR)/.git/.gitconfig:/home/$(USER)/.gitconfig:ro,cached,z \
 		-e RUN_ENV=development \
 		-e GITHUB_PERSONAL_ACCESS_TOKEN=$$(cat $(GIT_TOKEN_FILE)) \
+		-e JIRA_EMAIL=$$(cat $(OPENSHIFT_DEV_DIR)/jira_email 2>/dev/null || echo "") \
+		-e JIRA_TOKEN=$$(cat $(OPENSHIFT_DEV_DIR)/jira_token 2>/dev/null || echo "") \
 		art-dash-server:latest $(EXTRA_ARGS)
 
 # Test if the server is running by checking the response of curl to the API
