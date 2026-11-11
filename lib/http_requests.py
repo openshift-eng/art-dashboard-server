@@ -228,7 +228,8 @@ def get_advisories(branch_name):
         jira_link = group_data.get("release_jira", "")
         shipment = group_data.get("shipment", {})
         release_date = group_data.get("release_date", "")
-        advisory_data.append([version, advisories, jira_link, shipment, release_date])
+        status = yml_data["releases"][version].get("status", {})
+        advisory_data.append([version, advisories, jira_link, shipment, release_date, status])
 
     return advisory_data
 
@@ -267,7 +268,8 @@ def get_branch_advisory_ids(branch_name):
                         "release_date": release_date,
                         "advisories": shipment_advisories
                     }
-                advisory_data[advisory[0]] = [advisory[1], jira_link, shipment_info]
+                status_data = advisory[5] if len(advisory) > 5 else {}
+                advisory_data[advisory[0]] = [advisory[1], jira_link, shipment_info, status_data]
         if not advisories:  # If advisories is None or empty
             return {"current": {}, "previous": {}}  # Return empty data structure
 
