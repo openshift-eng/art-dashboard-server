@@ -83,6 +83,10 @@ def get_product_releases(product_id, group):
         assembly = release.get("assembly") or {}
         if version == "stream" or assembly.get("type", "").lower() == "custom":
             continue
+        # OpenShift stream variants are build configurations, not release versions.
+        # Layered products also use type=stream for real versioned releases.
+        if product_id == "openshift" and assembly.get("type", "").lower() == "stream":
+            continue
         effective = _assembly_field("group", data, version) or {}
         shipment = effective.get("shipment") or {}
         releases.append({
