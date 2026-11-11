@@ -7,7 +7,8 @@ group prefixes live in `lib/products.py`; add a registry entry to onboard anothe
 product using the same build-data and shipment metadata formats.
 
 - `GET /api/v1/products/` lists supported products.
-- `GET /api/v1/products/overview/` summarizes the newest group with release entries for each product.
+- `GET /api/v1/products/overview/` summarizes the latest recorded release in each product's GA group.
+- `GET /api/v1/products/acm/ga/` returns the latest GA series, group, and discovery source.
 - `GET /api/v1/products/acm/groups/` lists ACM build-data groups.
 - `GET /api/v1/products/acm/releases/?group=acm-2.17` lists recorded releases.
 - `GET /api/v1/products/acm/release/?group=acm-2.17&assembly=2.17.4` returns shipments, MR approvals, and legacy advisory IDs.
@@ -18,6 +19,13 @@ against the selected product/group/assembly. Multiple FBC files remain separate.
 Merged MRs are read at their merge commit, and each environment's recorded release
 result determines its status. Missing data and upstream errors remain explicit.
 Build-data metadata is cached for two minutes and shipment details for 30 seconds.
+
+OpenShift GA uses the highest numeric Cincinnati `channels/fast-X.Y.yaml` filename.
+For ACM and MCE, GA is the highest numeric build-data group with a non-empty
+`releases` mapping in `releases.yml`; empty or missing files are skipped. For
+example, empty `acm-5.1` and populated `acm-5.0` resolve to `v5.0`. This rule does
+not inspect shipment completion or MR state. GA results are cached for five minutes;
+upstream failures remain errors rather than selecting an older group.
 
 Deploy this API before updating the dashboard UI. Existing OpenShift endpoints
 remain available. The API uses the server's existing GitHub/GitLab configuration;

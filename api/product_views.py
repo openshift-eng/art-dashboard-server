@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from lib.product_releases import (
+    get_product_ga,
     get_product_groups,
     get_product_release,
     get_product_releases,
@@ -36,6 +37,11 @@ def overview(request):
 @api_view(["GET"])
 def groups(request, product_id):
     return _respond(get_product_groups, product_id)
+
+
+@api_view(["GET"])
+def ga(request, product_id):
+    return _respond(get_product_ga, product_id)
 
 
 @api_view(["GET"])

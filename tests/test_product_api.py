@@ -23,6 +23,22 @@ class ProductAPITests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual([p["id"] for p in response.data], ["openshift", "acm", "mce"])
 
+    @patch.object(product_views, "get_product_ga", return_value={"version": "5.0", "group": "acm-5.0"})
+    def test_ga_passes_product_and_returns_metadata(self, get):
+        response = product_views.ga(self.factory.get("/products/acm/ga/"), "acm")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["group"], "acm-5.0")
+        get.assert_called_once_with("acm")
+
+    def test_unknown_ga_product_returns_400(self):
+        response = product_views.ga(self.factory.get("/products/unknown/ga/"), "unknown")
+        self.assertEqual(response.status_code, 400)
+
+    @patch.object(product_views, "get_product_ga", side_effect=requests.HTTPError("Unavailable"))
+    def test_ga_upstream_failure_returns_502(self, get):
+        response = product_views.ga(self.factory.get("/products/acm/ga/"), "acm")
+        self.assertEqual(response.status_code, 502)
+
     def test_wrong_product_group_returns_400_without_network_access(self):
         response = product_views.releases(self.factory.get("/products/acm/releases/?group=mce-5.0"), "acm")
         self.assertEqual(response.status_code, 400)

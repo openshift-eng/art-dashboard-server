@@ -153,28 +153,7 @@ def refresh_krb_auth(func):
 
 
 def get_ga_version():
-    """
-    Get the latest GA version from https://github.com/openshift/cincinnati-graph-data/tree/master/channels
-    The highest version in the fast channel is considered GA.
-    """
-    headers = {"Authorization": f"token {os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']}"}
-    response = requests.get(
-        "https://api.github.com/repos/openshift/cincinnati-graph-data/git/trees/master?recursive=1",
-        headers=headers
-    )
+    """Get the latest OpenShift GA series from Cincinnati fast channel names."""
+    from lib.ga import get_openshift_ga_version
 
-    versions = []
-
-    for data in response.json()['tree']:
-        path: str = data['path']
-
-        regex = r"channels/fast-(?P<version>\d+.\d+).yaml"
-
-        if path.startswith("channels/fast"):
-            m = re.match(regex, path)
-            if m:
-                version: str = m.groupdict()['version']
-                versions.append(tuple(map(int, version.split("."))))
-    ga_version = sorted(versions, key=lambda x: (-x[0], -x[1]))[0]
-
-    return f"{ga_version[0]}.{ga_version[1]}"
+    return get_openshift_ga_version()
