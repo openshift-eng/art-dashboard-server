@@ -121,6 +121,11 @@ class ProductReleaseTests(unittest.TestCase):
         self.assertEqual(sorted(values, key=version_key, reverse=True),
                          ["4.21.42", "4.21.9", "4.21.0", "4.21.0-rc.1", "stream"])
 
+    def test_assembly_labels_do_not_sort_as_numeric_release_versions(self):
+        values = ["art23398", "rc.8", "ec.10", "5.0.0", "rc.10", "5.0.1", "ec.6"]
+        self.assertEqual(sorted(values, key=version_key, reverse=True),
+                         ["5.0.1", "5.0.0", "rc.10", "rc.8", "ec.10", "ec.6", "art23398"])
+
     @patch.object(releases, "_build_data_branches")
     def test_group_filtering_and_numeric_sort(self, branches):
         branches.return_value = [{"name": g} for g in ["mce-2.9", "mce-2.17", "mce-5.0", "mce-5.0-test", "acm-5.0"]]
@@ -209,6 +214,34 @@ class ProductReleaseTests(unittest.TestCase):
         self.assertEqual([r["version"] for r in result], ["2.17.4", "2.17.3"])
         self.assertEqual(result[0]["shipment_url"], MR + "4")
         self.assertEqual(result[0]["jira"], "ACM-123")
+
+    @patch.object(releases, "_build_data_yaml")
+    def test_openshift_latest_release_precedes_candidates_and_excludes_stream_variants(self, data):
+        data.side_effect = [{"product": "ocp"}, {"releases": {
+            "art23398": {"assembly": {"type": "stream", "basis": {"assembly": "stream"}}},
+            "rc.8": {"assembly": {"type": "candidate", "group": {"shipment": {"url": MR}}}},
+            "ec.6": {"assembly": {"type": "preview"}},
+            "5.0.0": {"assembly": {"type": "standard", "basis": {"assembly": "rc.8"}}},
+            "5.0.1": {"assembly": {"type": "standard", "group": {"shipment": {"url": MR + "4"}}}},
+            "custom": {"assembly": {"type": "custom"}},
+            "stream": {"assembly": {"type": "stream"}},
+        }}]
+        result = releases.get_product_releases("openshift", "openshift-5.0")
+        self.assertEqual([r["version"] for r in result], ["5.0.1", "5.0.0", "rc.8", "ec.6"])
+        self.assertEqual(result[0]["shipment_url"], MR + "4")
+        self.assertEqual(result[1]["shipment_url"], MR)
+
+    @patch.object(releases, "_build_data_yaml")
+    def test_versioned_layered_stream_releases_are_preserved(self, data):
+        for product, shipment_product in (("acm", "rhacm2"), ("mce", "multicluster-engine")):
+            with self.subTest(product=product):
+                data.side_effect = [{"product": shipment_product}, {"releases": {
+                    "5.0.0": {"assembly": {"type": "stream", "group": {"shipment": {"mr": MR}}}},
+                    "stream": {"assembly": {"type": "stream"}},
+                }}]
+                result = releases.get_product_releases(product, f"{product}-5.0")
+                self.assertEqual([r["version"] for r in result], ["5.0.0"])
+                self.assertEqual(result[0]["shipment_url"], MR)
 
     @patch.object(releases, "_build_data_yaml")
     def test_null_release_mapping_is_empty(self, data):

@@ -38,10 +38,11 @@ def validate_product_group(product_id, group):
 
 
 def version_key(value):
-    """Sort numeric releases before nonversions, with GA after its prereleases."""
-    match = re.search(r"(\d+(?:\.\d+)*)(.*)$", value)
+    """Sort dotted numeric versions first, then naturally ordered assembly labels."""
+    match = re.fullmatch(r"(?:[a-z]+-)?(\d+(?:\.\d+)+)(.*)", value)
     if not match:
-        return (), False, ()
+        label = tuple((1, int(part)) if part.isdigit() else (0, part) for part in re.split(r"(\d+)", value))
+        return (), False, label
     numbers = tuple(int(part) for part in match.group(1).split("."))
     suffix = match.group(2)
     natural_suffix = tuple((1, int(part)) if part.isdigit() else (0, part) for part in re.split(r"(\d+)", suffix))

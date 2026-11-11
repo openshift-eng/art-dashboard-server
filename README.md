@@ -16,6 +16,10 @@ product using the same build-data and shipment metadata formats.
 Release discovery accepts both `shipment.mr` and `shipment.url` pointers and uses
 assembly inheritance. Shipment files are discovered from MR diffs and validated
 against the selected product/group/assembly. Multiple FBC files remain separate.
+Numeric release versions sort ahead of abbreviated candidate/preview assembly
+names such as `rc.8` and `ec.6`. OpenShift stream variants such as `art23398` are
+excluded from the release list; versioned ACM/MCE assemblies with type `stream`
+remain supported.
 Merged MRs are read at their merge commit, and each environment's recorded release
 result determines its status. Missing data and upstream errors remain explicit.
 Build-data metadata is cached for two minutes and shipment details for 30 seconds.
