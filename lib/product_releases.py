@@ -8,11 +8,13 @@ import requests
 import yaml
 from cachetools import TTLCache, cached
 
+from lib.ga import get_openshift_ga_version
 from lib.gitlab_requests import get_shipment_status
 from lib.products import PRODUCTS, get_product, validate_product_group, version_key
 
 _metadata_cache = TTLCache(maxsize=128, ttl=120)
 _release_cache = TTLCache(maxsize=128, ttl=30)
+_ga_cache = TTLCache(maxsize=16, ttl=300)
 _cache_lock = RLock()
 
 
@@ -113,17 +115,34 @@ def get_product_release(product_id, group, version):
     return result
 
 
+@cached(_ga_cache, lock=_cache_lock)
+def get_product_ga(product_id):
+    product = get_product(product_id)
+    if product_id == "openshift":
+        version = get_openshift_ga_version()
+        return {"version": version, "group": f"{product['group_prefix']}-{version}", "source": "cincinnati-fast-channel"}
+
+    # For layered products, a populated release mapping marks a GA group.
+    for group in get_product_groups(product_id):
+        data = _build_data_yaml(group, "releases.yml", optional=True)
+        entries = data.get("releases") or {}
+        if not isinstance(entries, dict):
+            raise TypeError(f"Invalid releases mapping for {group}")
+        if entries:
+            version = group[len(product["group_prefix"]) + 1:]
+            return {"version": version, "group": group, "source": "build-data-releases"}
+    return {"version": None, "group": None, "source": "build-data-releases"}
+
+
 def get_products_overview():
     def summarize(product_id):
         product = get_product(product_id)
         try:
-            groups = get_product_groups(product_id)
-            # Prefer a group with release entries over a newly bootstrapped empty group.
-            for group in groups:
-                releases = get_product_releases(product_id, group)
-                if releases:
-                    return {"product": product, "group": group, "release": get_product_release(product_id, group, releases[0]["version"])}
-            return {"product": product, "group": groups[0] if groups else None, "release": None}
+            ga = get_product_ga(product_id)
+            group = ga["group"]
+            releases = get_product_releases(product_id, group) if group else []
+            release = get_product_release(product_id, group, releases[0]["version"]) if releases else None
+            return {"product": product, "group": group, "release": release, "ga": ga}
         except (requests.RequestException, ValueError, LookupError, TypeError, yaml.YAMLError) as exc:
             return {"product": product, "error": str(exc)}
 

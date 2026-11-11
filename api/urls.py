@@ -10,6 +10,7 @@ urlpatterns = [
     re_path(r'^products/$', product_views.products),
     re_path(r'^products/overview/$', product_views.overview),
     re_path(r'^products/(?P<product_id>[a-z0-9-]+)/groups/$', product_views.groups),
+    re_path(r'^products/(?P<product_id>[a-z0-9-]+)/ga/$', product_views.ga),
     re_path(r'^products/(?P<product_id>[a-z0-9-]+)/releases/$', product_views.releases),
     re_path(r'^products/(?P<product_id>[a-z0-9-]+)/release/$', product_views.release_detail),
     re_path(r'', include(router.urls)),
