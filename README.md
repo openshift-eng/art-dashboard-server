@@ -1,5 +1,31 @@
 # art-dashboard-server
 
+## Product release API
+
+The release dashboard supports OpenShift, ACM, and MCE. Product identities and
+group prefixes live in `lib/products.py`; add a registry entry to onboard another
+product using the same build-data and shipment metadata formats.
+
+- `GET /api/v1/products/` lists supported products.
+- `GET /api/v1/products/overview/` summarizes the newest group with release entries for each product.
+- `GET /api/v1/products/acm/groups/` lists ACM build-data groups.
+- `GET /api/v1/products/acm/releases/?group=acm-2.17` lists recorded releases.
+- `GET /api/v1/products/acm/release/?group=acm-2.17&assembly=2.17.4` returns shipments, MR approvals, and legacy advisory IDs.
+
+Release discovery accepts both `shipment.mr` and `shipment.url` pointers and uses
+assembly inheritance. Shipment files are discovered from MR diffs and validated
+against the selected product/group/assembly. Multiple FBC files remain separate.
+Merged MRs are read at their merge commit, and each environment's recorded release
+result determines its status. Missing data and upstream errors remain explicit.
+Build-data metadata is cached for two minutes and shipment details for 30 seconds.
+
+Deploy this API before updating the dashboard UI. Existing OpenShift endpoints
+remain available. The API uses the server's existing GitHub/GitLab configuration;
+no additional credential is required for products in the same shipment project.
+
+Run the isolated product regression tests without a database or network calls:
+`python -m unittest discover -s tests -p 'test_product*.py'`.
+
 ![run-tox badge](https://github.com/openshift-eng/art-dashboard-server/actions/workflows/run_tox.yml/badge.svg)
 
 # Setup Test Environment
